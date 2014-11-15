@@ -7,7 +7,7 @@ offer_hash is the hash of either a bet or an order.
 import binascii
 import struct
 
-from . import (util, config, exceptions, bitcoin, util)
+from . import (util, config, exceptions, worldcoin, util)
 from . import (order, bet, rps)
 
 FORMAT = '>32s'

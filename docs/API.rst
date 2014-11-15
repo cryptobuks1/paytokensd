@@ -9,8 +9,8 @@ Interacting with the API
 Overview
 ----------
 
-``counterpartyd`` features a full-fledged JSON RPC 2.0-based API, which allows
-third-party applications to perform functions on the Counterparty network
+``worldpartyd`` features a full-fledged JSON RPC 2.0-based API, which allows
+third-party applications to perform functions on the Worldparty network
 without having to deal with the low‐level details of the protocol such as
 transaction encoding and state management.
 
@@ -18,7 +18,7 @@ transaction encoding and state management.
 Connecting and Making Requests
 ---------------------------------
 
-By default, ``counterpartyd`` will listen on port ``4000`` (if on mainnet) or port ``14000`` (on testnet) for API
+By default, ``worldpartyd`` will listen on port ``4000`` (if on mainnet) or port ``14000`` (on testnet) for API
 requests. 
 
 Note that this API is built on JSON-RPC 2.0, not 1.1. JSON-RPC itself is pretty lightweight, and API requests
@@ -55,13 +55,13 @@ For more information on JSON RPC, please see the `JSON RPC 2.0 specification <ht
 
 Authentication
 ^^^^^^^^^^^^^^^
-Also note that the ``counterpartyd`` API interface requires HTTP basic authentication to use. The username and password required
-are stored in the ``counterpartyd.conf`` file, as ``rpc-user`` and ``rpc-password``, respectively. You can also modify
-``rpc-host`` and ``rpc-port`` to change what interface and port number ``counterpartyd`` binds to from the defaults.
+Also note that the ``worldpartyd`` API interface requires HTTP basic authentication to use. The username and password required
+are stored in the ``worldpartyd.conf`` file, as ``rpc-user`` and ``rpc-password``, respectively. You can also modify
+``rpc-host`` and ``rpc-port`` to change what interface and port number ``worldpartyd`` binds to from the defaults.
 
 .. _examples:
 
-Below we provide a few examples of using the ``counterpartyd`` API. Examples in other languages are welcome,
+Below we provide a few examples of using the ``worldpartyd`` API. Examples in other languages are welcome,
 if you'd like to submit them to us, structured in a way to be useful to other people and use standard libraries/methods. 
 
 Python Example
@@ -101,7 +101,7 @@ Python Example
       url, data=json.dumps(payload), headers=headers, auth=auth).json()
     print("GET_BALANCES RESULT: ", response)
 
-    #Get all burns between blocks 280537 and 280539 where greater than .2 BTC was burned, sorting by tx_hash (ascending order)
+    #Get all burns between blocks 280537 and 280539 where greater than .2 WDC was burned, sorting by tx_hash (ascending order)
     #With this (and the rest of the examples below) we use positional arguments, instead of keyword-based arguments
     payload = {
       "method": "get_burns",
@@ -118,10 +118,10 @@ Python Example
       url, data=json.dumps(payload), headers=headers, auth=auth).json()
     print("GET_BURNS RESULT: ", response)
     
-    #Fetch all debits for > 2 XCP between blocks 280537 and 280539, sorting the results by quantity (descending order)
+    #Fetch all debits for > 2 XBJ between blocks 280537 and 280539, sorting the results by quantity (descending order)
     payload = {
       "method": "get_debits",
-      "params": {"filters": [{'field': 'asset', 'op': '==', 'value': "XCP"},
+      "params": {"filters": [{'field': 'asset', 'op': '==', 'value': "XBJ"},
                              {'field': 'quantity', 'op': '>', 'value': 200000000}],
                 "filterop": 'AND',
                 "order_by": 'quantity',
@@ -134,13 +134,13 @@ Python Example
     print("GET_DEBITS RESULT: ", response)
     
     
-    #Send 1 XCP (specified in satoshis) from one address to another (you must have the sending address in your bitcoind wallet
+    #Send 1 XBJ (specified in satoshis) from one address to another (you must have the sending address in your worldcoind wallet
     # and it will be broadcast as a multisig transaction
     payload = {
       "method": "create_send",
       "params": {'source': "1CUdFmgK9trTNZHALfqGvd8d6nUZqH2AAf",
                  'destination': "17rRm52PYGkntcJxD2yQF9jQqRS4S2nZ7E",
-                 'asset': "XCP",
+                 'asset': "XBJ",
                  'quantity': 100000000},
       "jsonrpc": "2.0",
       "id": 0,
@@ -172,7 +172,7 @@ Python Example
 PHP Example
 ^^^^^^^^^^^^
 
-With PHP, you can connect and query ``counterpartyd`` using the `JsonRPC <https://github.com/fguillot/JsonRPC>`__
+With PHP, you can connect and query ``worldpartyd`` using the `JsonRPC <https://github.com/fguillot/JsonRPC>`__
 library. Here's a simple example that will get you the asset balances for a specific address:
 
 .. code-block:: php
@@ -214,10 +214,10 @@ assets
 ^^^^^^^^^
 
 Everywhere in the API an asset is referenced as an uppercase alphabetic (base
-26) string name of the asset, of at least 4 characters in length and not starting with 'A', or as 'BTC' or 'XCP' as appropriate. Examples are:
+26) string name of the asset, of at least 4 characters in length and not starting with 'A', or as 'WDC' or 'XBJ' as appropriate. Examples are:
 
-- "BTC"
-- "XCP"
+- "WDC"
+- "XBJ"
 - "FOOBAR"
 
 .. _quantitys:
@@ -233,7 +233,7 @@ Examples:
 - 4381030000 = 43.8103 (if divisible asset)
 - 4381030000 = 4381030000 (if indivisible asset) 
 
-**NOTE:** XCP and BTC themselves are divisible assets, and thus are listed in satoshis.
+**NOTE:** XBJ and WDC themselves are divisible assets, and thus are listed in satoshis.
 
 .. _floats:
 
@@ -247,7 +247,7 @@ Floats are are ratios or floating point values with six decimal places of precis
 Filtering Read API results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Counterparty API aims to be as simple and flexible as possible. To this end, it includes a straightforward
+The Worldparty API aims to be as simple and flexible as possible. To this end, it includes a straightforward
 way to filter the results of most :ref:`Read API functions <read_api>` to get the data you want, and only that.
 
 For each Read API function that supports it, a ``filters`` parameter exists. To apply a filter to a specific data field,
@@ -278,40 +278,40 @@ the specific comparison logic used, please see `this page <http://www.sqlite.org
 The ``encoding`` Parameter of ``create_`` Calls 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All ``create_`` API calls return an *unsigned raw transaction string*, hex encoded (i.e. the same format that ``bitcoind`` returns
+All ``create_`` API calls return an *unsigned raw transaction string*, hex encoded (i.e. the same format that ``worldcoind`` returns
 with its raw transaction API calls).
 
 The exact form and format of this unsigned raw transaction string is specified via the ``encoding`` and ``pubkey`` parameters on each ``create_``
 API call:
 
 - To return the transaction as an **OP_RETURN** transaction, specify ``opreturn`` for the ``encoding`` parameter.
-  Note that as of ``bitcoind`` 0.9.0, not all Counterparty transactions are possible with OP_RETURN, due to the 40
-  byte limit imposed by the ``bitcoind`` client in order for the transaction to be relayed on mainnet.
+  Note that as of ``worldcoind`` 0.9.0, not all Worldparty transactions are possible with OP_RETURN, due to the 40
+  byte limit imposed by the ``worldcoind`` client in order for the transaction to be relayed on mainnet.
 - To return the transaction as a **multisig** transaction, specify ``multisig`` for the ``encoding`` parameter.
     
-    - If the source address is in the local ``bitcoind`` ``wallet.dat``. ``pubkey`` can be left as ``null``.
-    - If the source address is *not* in the local ``bitcoind`` ``wallet.dat``, ``pubkey`` should be set to the hex-encoded
+    - If the source address is in the local ``worldcoind`` ``wallet.dat``. ``pubkey`` can be left as ``null``.
+    - If the source address is *not* in the local ``worldcoind`` ``wallet.dat``, ``pubkey`` should be set to the hex-encoded
       public key.
-- ``auto`` may also be specified to let ``counterpartyd`` choose here. Note that at this time, ``auto`` is effectively the same as
+- ``auto`` may also be specified to let ``worldpartyd`` choose here. Note that at this time, ``auto`` is effectively the same as
   ``multisig``.
 
-- To return the Counterparty transaction encoded into arbitrary address outputs (i.e. pubkeyhash encoding), specify
+- To return the Worldparty transaction encoded into arbitrary address outputs (i.e. pubkeyhash encoding), specify
   ``pubkeyhash`` for the ``encoding`` parameter. ``pubkey`` is also required to be set (as above, with ``multisig`` encoding)
-  if the source address is not contained in the local ``bitcoind`` ``wallet.dat``. Note that this method is **not** recommended
+  if the source address is not contained in the local ``worldcoind`` ``wallet.dat``. Note that this method is **not** recommended
   as a first-resort, as it pollutes the UTXO set.
 
 With any of the above settings, as the *unsigned* raw transaction is returned from the ``create_`` API call itself, you
 then have two approaches with respect to broadcasting the transaction on the network:
 
-- If the private key you need to sign the raw transaction is in the local ``bitcoind`` ``wallet.dat``, you should then call the
+- If the private key you need to sign the raw transaction is in the local ``worldcoind`` ``wallet.dat``, you should then call the
   ``sign_tx`` API call and pass it to the raw unsigned transaction string as the ``tx_hex`` parameter, with the ``privkey`` parameter
   set to None. This method will then return the signed hex transaction, which you can then broadcast using the ``broadcast_tx``
   API method.
-- If the private key you need to sign the raw transaction is *not* in the local ``bitcoind`` ``wallet.dat``, you must first sign
+- If the private key you need to sign the raw transaction is *not* in the local ``worldcoind`` ``wallet.dat``, you must first sign
   the transaction yourself (or, alternatively, you can call the ``sign_tx`` API method and specify
-  the private key string to it, and ``counterpartyd`` will sign it for you). In either case, once you have the signed,
+  the private key string to it, and ``worldpartyd`` will sign it for you). In either case, once you have the signed,
   hex-encoded transaction string, you can then call the ``broadcast_tx`` API method, which will then broadcast the transaction on the
-  Bitcoin network for you.
+  Worldcoin network for you.
   
 **Note that you can also use a :ref:`do_ call instead <do_table>`, which will take care of creating the transaction,
 signing it, and broadcasting it, all in one step.**
@@ -331,7 +331,7 @@ get_{table}
 limit=1000, offset=0, show_expired=True)**
 
 **{table}** must be one of the following values:
-``balances``, ``credits``, ``debits``, ``bets``, ``bet_matches``, ``broadcasts``, ``btcpays``, ``burns``, 
+``balances``, ``credits``, ``debits``, ``bets``, ``bet_matches``, ``broadcasts``, ``wdcpays``, ``burns``, 
 ``callbacks``, ``cancels``, ``dividends``, ``issuances``, ``orders``, ``order_matches``, ``sends``, 
 ``bet_expirations``, ``order_expirations``, ``bet_match_expirations``, ``order_match_expirations``,
 ``rps``, ``rps_expirations``, ``rps_matches``, ``rps_match_expirations``, or ``rpsresolves``.
@@ -375,8 +375,8 @@ For example: ``get_balances``, ``get_credits``, ``get_debits``, etc are all vali
 
 **Notes:**
 
-  * Please note that the ``get_balances`` API call will not return balances for BTC itself. It only returns balances
-    for XCP and other Counterparty assets. To get BTC-based balances, use an existing system such as Insight, blockr.io,
+  * Please note that the ``get_balances`` API call will not return balances for WDC itself. It only returns balances
+    for XBJ and other Worldparty assets. To get WDC-based balances, use an existing system such as Insight, blockr.io,
     or blockchain.info.
 
 
@@ -413,13 +413,13 @@ get_asset_names
 ^^^^^^^^^^^^^^^^
 **get_asset_names()**
 
-Returns a list of all existing Counterparty assets. 
+Returns a list of all existing Worldparty assets. 
 
 **Parameters:** None
 
 **Return:**
 
-  A list of existing Counterparty asset names.
+  A list of existing Worldparty asset names.
 
 .. _get_messages:
 
@@ -427,7 +427,7 @@ get_messages
 ^^^^^^^^^^^^^^
 **get_messages(block_index)**
 
-Return message feed activity for the specified block index. The message feed essentially tracks all counterpartyd
+Return message feed activity for the specified block index. The message feed essentially tracks all worldpartyd
 database actions and allows for lower-level state tracking for applications that hook into it.
    
 **Parameters:**
@@ -454,13 +454,13 @@ Return the message feed messages whose ``message_index`` values are contained in
 
   A list containing a `message <#message-object>`_ for each message found in the specified ``message_indexes`` list. If none were found, ``[]`` (empty list) is returned.
 
-.. _get_xcp_supply:
+.. _get_xbj_supply:
 
-get_xcp_supply
+get_xbj_supply
 ^^^^^^^^^^^^^^^
-**get_xcp_supply()**
+**get_xbj_supply()**
 
-Gets the current total quantity of XCP in existance (i.e. quantity created via proof-of-burn, minus quantity
+Gets the current total quantity of XBJ in existance (i.e. quantity created via proof-of-burn, minus quantity
 destroyed via asset issuances, etc).
 
 **Parameters:**
@@ -469,7 +469,7 @@ destroyed via asset issuances, etc).
 
 **Return:** 
 
-  The :ref:`quantity <quantitys>` of XCP currently in existance.
+  The :ref:`quantity <quantitys>` of XBJ currently in existance.
 
 .. _get_block_info:
 
@@ -522,7 +522,7 @@ get_running_info
 ^^^^^^^^^^^^^^^^^
 **get_running_info()**
 
-Gets some operational parameters for counterpartyd.
+Gets some operational parameters for worldpartyd.
 
 **Parameters:**
 
@@ -532,14 +532,14 @@ Gets some operational parameters for counterpartyd.
 
   An object with the following parameters:
 
-  - **db_caught_up** (*boolean*): ``true`` if counterpartyd block processing is caught up with the Bitcoin blockchain, ``false`` otherwise.
-  - **bitcoin_block_count** (**integer**): The block height on the Bitcoin network (may not necessarily be the same as ``last_block``, if ``counterpartyd`` is catching up)
-  - **last_block** (*integer*): The index (height) of the last block processed by ``counterpartyd``
-  - **counterpartyd_version** (*float*): The counterpartyd program version, expressed as a float, such as 0.5
-  - **last_message_index** (*integer*): The index (ID) of the last message in the ``counterpartyd`` message feed
-  - **running_testnet** (*boolean*): ``true`` if counterpartyd is configured for testnet, ``false`` if configured on mainnet.
-  - **db_version_major** (*integer*): The major version of the current counterpartyd database
-  - **db_version_minor** (*integer*): The minor version of the current counterpartyd database
+  - **db_caught_up** (*boolean*): ``true`` if worldpartyd block processing is caught up with the Worldcoin blockchain, ``false`` otherwise.
+  - **worldcoin_block_count** (**integer**): The block height on the Worldcoin network (may not necessarily be the same as ``last_block``, if ``worldpartyd`` is catching up)
+  - **last_block** (*integer*): The index (height) of the last block processed by ``worldpartyd``
+  - **worldpartyd_version** (*float*): The worldpartyd program version, expressed as a float, such as 0.5
+  - **last_message_index** (*integer*): The index (ID) of the last message in the ``worldpartyd`` message feed
+  - **running_testnet** (*boolean*): ``true`` if worldpartyd is configured for testnet, ``false`` if configured on mainnet.
+  - **db_version_major** (*integer*): The major version of the current worldpartyd database
+  - **db_version_minor** (*integer*): The minor version of the current worldpartyd database
 
 
 Action/Write API Function Reference
@@ -557,7 +557,7 @@ Sign a transaction created with the Action/Write API.
 
   * **tx_hex (string):** A hex-encoded raw transaction (which was created via one of the ``create_`` calls).
   * **privkey (string):** The private key in WIF format to use for signing the transaction. If not provided,
-    the private key must to be known by the ``bitcoind`` wallet.
+    the private key must to be known by the ``worldcoind`` wallet.
   
 **Return:** 
 
@@ -570,7 +570,7 @@ broadcast_tx
 ^^^^^^^^^^^^^^
 **broadcast_tx(signed_tx_hex)**
 
-Broadcast a signed transaction onto the Bitcoin network.
+Broadcast a signed transaction onto the Worldcoin network.
 
 **Parameters:**
 
@@ -579,7 +579,7 @@ Broadcast a signed transaction onto the Bitcoin network.
   
 **Return:** 
 
-  The created transaction's id on the Bitcoin network, or an error if the transaction is invalid for any reason.
+  The created transaction's id on the Worldcoin network, or an error if the transaction is invalid for any reason.
 
 .. _create_bet:
 
@@ -596,16 +596,16 @@ Issue a bet against a feed.
   * **feed_address (string):** The address that host the feed to be bet on.
   * **bet_type (integer):** 0 for Bullish CFD, 1 for Bearish CFD, 2 for Equal, 3 for NotEqual.
   * **deadline (integer):** The time at which the bet should be decided/settled, in Unix time.
-  * **wager (integer):** The :ref:`quantity <quantitys>` of XCP to wager.
-  * **counterwager (integer):** The minimum :ref:`quantity <quantitys>` of XCP to be wagered against, for the bets to match.
+  * **wager (integer):** The :ref:`quantity <quantitys>` of XBJ to wager.
+  * **counterwager (integer):** The minimum :ref:`quantity <quantitys>` of XBJ to be wagered against, for the bets to match.
   * **expiration (integer):** The number of blocks after which the bet expires if it's still unmatched.
   * **target_value (float):** Target value for Equal/NotEqual bet
   * **leverage (integer):** Leverage, as a fraction of 5040
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -628,32 +628,32 @@ Broadcast textual and numerical information to the network.
   * **timestamp (integer):** The timestamp of the broadcast, in Unix time.
   * **value (float):** Numerical value of the broadcast.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
   The unsigned transaction, as an hex-encoded string. See :ref:`this section <encoding_param>` for more information.
 
-.. _create_btcpay:
+.. _create_wdcpay:
 
-create_btcpay
+create_wdcpay
 ^^^^^^^^^^^^^^
-**create_btcpay(order_match_id, encoding='multisig', pubkey=null,
+**create_wdcpay(order_match_id, encoding='multisig', pubkey=null,
 allow_unconfirmed_inputs=false, fee=null, fee_per_kb=10000)**
 
-Create and (optionally) broadcast a BTCpay message, to settle an Order Match for which you owe BTC. 
+Create and (optionally) broadcast a WDCpay message, to settle an Order Match for which you owe WDC. 
 
 **Parameters:**
 
   * **order_match_id (string):** The concatenation of the hashes of the two transactions which compose the order match.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -665,17 +665,17 @@ create_burn
 ^^^^^^^^^^^^^^
 **create_burn(source, quantity, encoding='multisig', pubkey=null, allow_unconfirmed_inputs=false, fee=null, fee_per_kb=10000)**
 
-Burn a given quantity of BTC for XCP (**only possible between blocks 278310 and 283810**).
+Burn a given quantity of WDC for XBJ (**only possible between blocks 278310 and 283810**).
 
 **Parameters:**
 
-  * **source (string):** The address with the BTC to burn.
-  * **quantity (integer):** The :ref:`quantity <quantitys>` of BTC to burn (1 BTC maximum burn per address).
+  * **source (string):** The address with the WDC to burn.
+  * **quantity (integer):** The :ref:`quantity <quantitys>` of WDC to burn (1 WDC maximum burn per address).
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -694,10 +694,10 @@ Make a call on a callable asset (where some whole or part of the asset is return
   * **source (string):** The callback source address. Must be the same address as the specified asset's owner.
   * **fraction (float):** A floating point number greater than zero but less than or equal to 1, where 0% is for a callback of 0% of the balance of each of the asset's holders, and 1 would be for a callback of 100%). For example, ``0.56`` would be 56%. Each holder of the called asset will be paid the call price for the asset, times the number of units of that asset that were called back from them.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -715,10 +715,10 @@ Cancel an open order or bet you created.
 
   * **offer_hash (string):** The transaction hash of the order or bet.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -737,12 +737,12 @@ Issue a dividend on a specific user defined asset.
   * **source (string):** The address that will be issuing the dividend (must have the ownership of the asset which the dividend is being issued on).
   * **asset (string):** The :ref:`asset <assets>` that the dividends are being rewarded on.
   * **dividend_asset (string):** The :ref:`asset <assets>` that the dividends are paid in.
-  * **quantity_per_unit (integer):** The :ref:`quantity <quantitys>` of XCP rewarded per whole unit of the asset.
+  * **quantity_per_unit (integer):** The :ref:`quantity <quantitys>` of XBJ rewarded per whole unit of the asset.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -765,14 +765,14 @@ Issue a new asset, issue more of an existing asset, lock an asset, or transfer t
   * **divisible (boolean):** Whether this asset is divisible or not (if a transfer, this value must match the value specified when the asset was originally issued).
   * **callable (boolean):** Whether the asset is callable or not.
   * **call_date (integer):** The timestamp at which the asset may be called back, in Unix time. Only valid for callable assets.
-  * **call_price (float):** The :ref:`price <floats>` per unit XCP at which the asset may be called back, on or after the specified call_date. Only valid for callable assets.
+  * **call_price (float):** The :ref:`price <floats>` per unit XBJ at which the asset may be called back, on or after the specified call_date. Only valid for callable assets.
   * **description (string):** A textual description for the asset. 52 bytes max.
   * **transfer_destination (string):** The address to receive the asset (only used when *transferring* assets -- leave set to ``null`` if issuing an asset).
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -802,13 +802,13 @@ Issue an order request.
   * **get_quantity (integer):** The :ref:`quantity <quantitys>` of the asset requested in return.
   * **get_asset (string):** The :ref:`asset <assets>` requested in return.
   * **expiration (integer):** The number of blocks for which the order should be valid.
-  * **fee_required (integer):** The miners' fee required to be paid by orders for them to match this one; in BTC; required only if buying BTC (may be zero, though). If not specified or set to ``null``, this defaults to 1% of the BTC desired for purchase.
-  * **fee_provided (integer):** The miners' fee provided; in BTC; required only if selling BTC (should not be lower than is required for acceptance in a block).  If not specified or set to ``null``, this defaults to 1% of the BTC for sale. 
+  * **fee_required (integer):** The miners' fee required to be paid by orders for them to match this one; in WDC; required only if buying WDC (may be zero, though). If not specified or set to ``null``, this defaults to 1% of the WDC desired for purchase.
+  * **fee_provided (integer):** The miners' fee provided; in WDC; required only if selling WDC (should not be lower than is required for acceptance in a block).  If not specified or set to ``null``, this defaults to 1% of the WDC for sale. 
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -820,7 +820,7 @@ create_send
 ^^^^^^^^^^^^^^
 **create_send(source, destination, asset, quantity, encoding='multisig', pubkey=null, allow_unconfirmed_inputs=false, fee=null, fee_per_kb=10000)**
 
-Send XCP or a user defined asset.
+Send XBJ or a user defined asset.
 
 **Parameters:**
 
@@ -829,10 +829,10 @@ Send XCP or a user defined asset.
   * **quantity (integer):** The :ref:`quantity <quantitys>` of the asset to send.
   * **asset (string):** The :ref:`asset <assets>` to send.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -851,14 +851,14 @@ Open a Rock-Paper-Scissors (RPS) like game.
 
   * **source (string):** The address that will be sending (must have the necessary quantity of the specified asset).
   * **possible_moves (integer):** The number of possible moves. Must be an odd number greater or equal than 3.
-  * **wager (integer):** The :ref:`quantity <quantitys>` of XCP to wager.
+  * **wager (integer):** The :ref:`quantity <quantitys>` of XBJ to wager.
   * **move_random_hash (string):** A 32 bytes hex string (64 chars): sha256(sha256(random+move)). Where random is 16 bytes random number.
   * **expiration (integer):** The number of blocks for which the game should be valid.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -877,10 +877,10 @@ Resolve a Rock-Paper-Scissors game.
   * **random (string):** A 16 bytes hex string (32 chars) used to generate the move_random_hash value.
   * **rps_match_id (string):** The concatenation of the hashes of the two transactions which compose the rps match.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``counterpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``worldpartyd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``counterpartyd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``counterpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``worldpartyd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``worldpartyd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -897,7 +897,7 @@ raw transaction, which you must then sign and broadcast, this call will create t
 it automatically.
 
 **{entity}** must be one of the following values:
-``bet``, ``broadcast``, ``btcpay``, ``burn``,  ``callback``, ``cancel``, ``dividend``, ``issuance``,
+``bet``, ``broadcast``, ``wdcpay``, ``burn``,  ``callback``, ``cancel``, ``dividend``, ``issuance``,
 ``order``, ``send``,  ``rps``, ``rpsresolve``.
 
 For example: ``do_bet``, ``do_burn``, ``do_dividend``, etc are all valid API methods.
@@ -905,12 +905,12 @@ For example: ``do_bet``, ``do_burn``, ``do_dividend``, etc are all valid API met
 **Parameters:**
 
   * **privkey (string):** The private key in WIF format to use for signing the transaction. If not provided,
-    the private key must to be known by the ``bitcoind`` wallet.
+    the private key must to be known by the ``worldcoind`` wallet.
   * The other parameters for a given ``do_`` method are the same as the corresponding ``create_`` call.
 
 **Return:**
 
-  The created transaction's id on the Bitcoin network, or an error if the transaction is invalid for any reason.
+  The created transaction's id on the Worldcoin network, or an error if the transaction is invalid for any reason.
 
 
 
@@ -945,9 +945,9 @@ An object that describes a specific bet:
 * **feed_address** (*string*): The address with the feed that the bet is to be made on
 * **bet_type** (*integer*): 0 for Bullish CFD, 1 for Bearish CFD, 2 for Equal, 3 for Not Equal
 * **deadline** (*integer*): The timestamp at which the bet should be decided/settled, in Unix time.
-* **wager_quantity** (*integer*): The :ref:`quantity <quantitys>` of XCP to wager
-* **counterwager_quantity** (*integer*): The minimum :ref:`quantity <quantitys>` of XCP to be wagered by the user to bet against the bet issuer, if the other party were to accept the whole thing
-* **wager_remaining** (*integer*): The quantity of XCP wagered that is remaining to bet on
+* **wager_quantity** (*integer*): The :ref:`quantity <quantitys>` of XBJ to wager
+* **counterwager_quantity** (*integer*): The minimum :ref:`quantity <quantitys>` of XBJ to be wagered by the user to bet against the bet issuer, if the other party were to accept the whole thing
+* **wager_remaining** (*integer*): The quantity of XBJ wagered that is remaining to bet on
 * **odds** (*float*): 
 * **target_value** (*float*): Target value for Equal/NotEqual bet
 * **leverage** (*integer*): Leverage, as a fraction of 5040
@@ -963,9 +963,9 @@ Bet Match Object
 
 An object that describes a specific occurance of two bets being matched (either partially, or fully):
 
-* **tx0_index** (*integer*): The Bitcoin transaction index of the initial bet
-* **tx0_hash** (*string*): The Bitcoin transaction hash of the initial bet
-* **tx0_block_index** (*integer*): The Bitcoin block index of the initial bet
+* **tx0_index** (*integer*): The Worldcoin transaction index of the initial bet
+* **tx0_hash** (*string*): The Worldcoin transaction hash of the initial bet
+* **tx0_block_index** (*integer*): The Worldcoin block index of the initial bet
 * **tx0_expiration** (*integer*): The number of blocks over which the initial bet was valid
 * **tx0_address** (*string*): The address that issued the initial bet
 * **tx0_bet_type** (*string*): The type of the initial bet (0 for Bullish CFD, 1 for Bearish CFD, 2 for Equal, 3 for Not Equal)
@@ -980,8 +980,8 @@ An object that describes a specific occurance of two bets being matched (either 
 * **deadline** (*integer*): The timestamp at which the bet match was made, in Unix time.
 * **target_value** (*float*): Target value for Equal/NotEqual bet  
 * **leverage** (*integer*): Leverage, as a fraction of 5040
-* **forward_quantity** (*integer*): The :ref:`quantity <quantitys>` of XCP bet in the initial bet
-* **backward_quantity** (*integer*): The :ref:`quantity <quantitys>` of XCP bet in the matching bet
+* **forward_quantity** (*integer*): The :ref:`quantity <quantitys>` of XBJ bet in the initial bet
+* **backward_quantity** (*integer*): The :ref:`quantity <quantitys>` of XBJ bet in the matching bet
 * **fee_multiplier** (*integer*): 
 * **validity** (*string*): Set to "valid" if a valid order match. Any other setting signifies an invalid/improper order match
 
@@ -1004,12 +1004,12 @@ An object that describes a specific occurance of a broadcast event (i.e. creatin
 * **validity** (*string*): Set to "valid" if a valid broadcast. Any other setting signifies an invalid/improper broadcast
 
 
-.. _btcpay-object:
+.. _wdcpay-object:
 
-BTCPay Object
+WDCPay Object
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-An object that matches a request to settle an Order Match for which BTC is owed:
+An object that matches a request to settle an Order Match for which WDC is owed:
 
 * **tx_index** (*integer*): The transaction index
 * **tx_hash** (*string*): The transaction hash
@@ -1030,8 +1030,8 @@ An object that describes an instance of a specific burn:
 * **tx_hash** (*string*): The transaction hash
 * **block_index** (*integer*): The block index (block number in the block chain)
 * **source** (*string*): The address the burn was performed from
-* **burned** (*integer*): The :ref:`quantity <quantitys>` of BTC burned
-* **earned** (*integer*): The :ref:`quantity <quantitys>` of XPC actually earned from the burn (takes into account any bonus quantitys, 1 BTC limitation, etc)
+* **burned** (*integer*): The :ref:`quantity <quantitys>` of WDC burned
+* **earned** (*integer*): The :ref:`quantity <quantitys>` of XPC actually earned from the burn (takes into account any bonus quantitys, 1 WDC limitation, etc)
 * **validity** (*string*): Set to "valid" if a valid burn. Any other setting signifies an invalid/improper burn
 
 
@@ -1077,7 +1077,7 @@ An object that describes an issuance of dividends on a specific user defined ass
 * **block_index** (*integer*): The block index (block number in the block chain)
 * **source** (*string*): The address that issued the dividend
 * **asset** (*string*): The :ref:`asset <assets>` that the dividends are being rewarded on 
-* **quantity_per_unit** (*integer*): The :ref:`quantity <quantitys>` of XCP rewarded per whole unit of the asset
+* **quantity_per_unit** (*integer*): The :ref:`quantity <quantitys>` of XBJ rewarded per whole unit of the asset
 * **validity** (*string*): Set to "valid" if a valid burn. Any other setting signifies an invalid/improper burn
 
 
@@ -1118,8 +1118,8 @@ An object that describes a specific order:
 * **get_remaining** (*integer*): The :ref:`quantity <quantitys>` of the specified get asset remaining for the order
 * **price** (*float*): The given exchange rate (as an exchange ratio desired from the asset offered to the asset desired)
 * **expiration** (*integer*): The number of blocks over which the order should be valid
-* **fee_provided** (*integer*): The miners' fee provided; in BTC; required only if selling BTC (should not be lower than is required for acceptance in a block)
-* **fee_required** (*integer*): The miners' fee required to be paid by orders for them to match this one; in BTC; required only if buying BTC (may be zero, though)
+* **fee_provided** (*integer*): The miners' fee provided; in WDC; required only if selling WDC (should not be lower than is required for acceptance in a block)
+* **fee_required** (*integer*): The miners' fee required to be paid by orders for them to match this one; in WDC; required only if buying WDC (may be zero, though)
 
 
 .. _order-match-object:
@@ -1129,9 +1129,9 @@ Order Match Object
 
 An object that describes a specific occurance of two orders being matched (either partially, or fully):
 
-* **tx0_index** (*integer*): The Bitcoin transaction index of the first (earlier) order
-* **tx0_hash** (*string*): The Bitcoin transaction hash of the first order
-* **tx0_block_index** (*integer*): The Bitcoin block index of the first order
+* **tx0_index** (*integer*): The Worldcoin transaction index of the first (earlier) order
+* **tx0_hash** (*string*): The Worldcoin transaction hash of the first order
+* **tx0_block_index** (*integer*): The Worldcoin block index of the first order
 * **tx0_expiration** (*integer*): The number of blocks over which the first order was valid
 * **tx0_address** (*string*): The address that issued the first (earlier) order
 * **tx1_index** (*integer*): The transaction index of the second (matching) order
@@ -1151,7 +1151,7 @@ An object that describes a specific occurance of two orders being matched (eithe
 Send Object
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-An object that describes a specific send (e.g. "simple send", of XCP, or a user defined asset):
+An object that describes a specific send (e.g. "simple send", of XBJ, or a user defined asset):
 
 * **tx_index** (*integer*): The transaction index
 * **tx_hash** (*string*): The transaction hash
@@ -1168,13 +1168,13 @@ An object that describes a specific send (e.g. "simple send", of XCP, or a user 
 Message Object
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-An object that describes a specific event in the counterpartyd message feed (which can be used by 3rd party applications
-to track state changes to the counterpartyd database on a block-by-block basis).
+An object that describes a specific event in the worldpartyd message feed (which can be used by 3rd party applications
+to track state changes to the worldpartyd database on a block-by-block basis).
 
 * **message_index** (*integer*): The message index (i.e. transaction index)
 * **block_index** (*integer*): The block index (block number in the block chain) this event occurred on
 * **category** (*string*): A string denoting the entity that the message relates to, e.g. "credits", "burns", "debits".
-  The category matches the relevant table name in counterpartyd (see blocks.py for more info).
+  The category matches the relevant table name in worldpartyd (see blocks.py for more info).
 * **command** (*string*): The operation done to the table noted in **category**. This is either "insert", or "update". 
 * **bindings** (*string*): A JSON-encoded object containing the message data. The properties in this object match the
   columns in the table referred to by **category**.
@@ -1262,7 +1262,7 @@ Here the list of all possible status for each table:
 * **bet_matches**: pending, settled: liquidated for bear, settled, settled: liquidated for bull, settled: for equal, settled: for notequal, dropped, expired
 * **bets**: open, filled, cancelled, expired, dropped, invalid: {problem(s)}
 * **broadcasts**: valid, invalid: {problem(s)}
-* **btcpays**: valid, invalid: {problem(s)}
+* **wdcpays**: valid, invalid: {problem(s)}
 * **burns**: valid, invalid: {problem(s)}
 * **callbacks**: valid, invalid: {problem(s)}
 * **cancels**: valid, invalid: {problem(s)}
@@ -1280,7 +1280,7 @@ Here the list of all possible status for each table:
 API Changes
 -------------
 
-This section documents any changes to the ``counterpartyd`` API, for version numbers where there were API-level modifications.
+This section documents any changes to the ``worldpartyd`` API, for version numbers where there were API-level modifications.
 
 
 .. _9_24_1:
@@ -1308,7 +1308,7 @@ This section documents any changes to the ``counterpartyd`` API, for version num
 * create_bet: ``wager`` and ``counterwager`` args are replaced by ``wager_quantity`` and ``counterwager_quantity``
 * create_issuance: parameter ``lock`` (boolean) removed (use LOCK in description)
 * create_issuance: parameter ``transfer_destination`` replaced by ``destination``
-* DatabaseError: now a DatabaseError is returned immediately if the counterpartyd database is behind the backend, instead of after fourteen seconds
+* DatabaseError: now a DatabaseError is returned immediately if the worldpartyd database is behind the backend, instead of after fourteen seconds
 
 
 .. _9_32_0:

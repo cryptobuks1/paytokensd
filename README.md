@@ -1,41 +1,41 @@
-[![Build Status](https://travis-ci.org/CounterpartyXCP/counterpartyd.svg?branch=develop)](https://travis-ci.org/CounterpartyXCP/counterpartyd)
+[![Build Status](https://travis-ci.org/WorldpartyXBJ/worldpartyd.svg?branch=develop)](https://travis-ci.org/WorldpartyXBJ/worldpartyd)
 
 # Description
-Counterparty is a protocol for the creation and use of decentralised financial
+Worldparty is a protocol for the creation and use of decentralised financial
 instruments such as asset exchanges, contracts for difference and dividend
-payments. It uses Bitcoin as a transport layer. The contents of this
-repository, `counterpartyd`, constitute the reference implementation of the
+payments. It uses Worldcoin as a transport layer. The contents of this
+repository, `worldpartyd`, constitute the reference implementation of the
 protocol.
 
-The Counterparty protocol specification may be found at
-<https://github.com/CounterpartyXCP/Counterparty>.
+The Worldparty protocol specification may be found at
+<https://github.com/WorldpartyXBJ/Worldparty>.
 
 # Dependencies
 * [Python 3](http://python.org)
-* Python 3 packages: apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, tornado, flask, Flask-HTTPAuth, pycoin, pyzmq(v2.2+), pycrypto, lockfile, python-bitcoinlib (see [this link](https://github.com/CounterpartyXCP/counterpartyd/blob/master/pip-requirements.txt) for exact working versions)
-* Bitcoind
+* Python 3 packages: apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, tornado, flask, Flask-HTTPAuth, pycoin, pyzmq(v2.2+), pycrypto, lockfile, python-bitcoinlib (see [this link](https://github.com/WorldpartyXBJ/worldpartyd/blob/master/pip-requirements.txt) for exact working versions)
+* Worldcoind
 
 # Installation
 
-**NOTE: This section covers manual installation of counterpartyd. If you want more of
-an automated approach to counterpartyd installation for Windows and Linux, see [this link](http://counterparty.io/docs/build-system/).**
+**NOTE: This section covers manual installation of worldpartyd. If you want more of
+an automated approach to worldpartyd installation for Windows and Linux, see [this link](http://worldparty.io/docs/build-system/).**
 
-In order for counterpartyd to function, it must be able to communicate with a
-running instance of Bitcoind or Bitcoin-Qt, which handles many Bitcoin‐specific
+In order for worldpartyd to function, it must be able to communicate with a
+running instance of Worldcoind or Worldcoin-Qt, which handles many Worldcoin‐specific
 matters on its behalf, including all wallet and private key management. For
-such interoperability, Bitcoind must be run with the following options:
+such interoperability, Worldcoind must be run with the following options:
 `-txindex=1` `-server=1`. This may require the setting of a JSON‐RPC password,
-which may be saved in Bitcoind’s configuration file.
+which may be saved in Worldcoind’s configuration file.
 
-counterpartyd needs to know at least the JSON‐RPC password of the Bitcoind with
+worldpartyd needs to know at least the JSON‐RPC password of the Worldcoind with
 which it is supposed to communicate. The simplest way to set this is to
-include it in all command‐line invocations of counterpartyd, such as
-`./counterpartyd.py --rpc-password=PASSWORD ACTION`. To make this and other
-options persistent across counterpartyd sessions, one may store the desired
-settings in a configuration file specific to counterpartyd.
+include it in all command‐line invocations of worldpartyd, such as
+`./worldpartyd.py --rpc-password=PASSWORD ACTION`. To make this and other
+options persistent across worldpartyd sessions, one may store the desired
+settings in a configuration file specific to worldpartyd.
 
-Note that the syntaxes for the countpartyd and the Bitcoind configuraion
-files are not the same. A Bitcoind configuration file looks like this:
+Note that the syntaxes for the countpartyd and the Worldcoind configuraion
+files are not the same. A Worldcoind configuration file looks like this:
 
 	rpcuser=bitcoinrpc
 	rpcpassword=PASSWORD
@@ -43,21 +43,21 @@ files are not the same. A Bitcoind configuration file looks like this:
 	txindex=1
 	server=1
 
-However, a counterpartyd configuration file looks like this:
+However, a worldpartyd configuration file looks like this:
 
 	[Default]
 	bitcoind-rpc-password=PASSWORD
 
 Note the change in hyphenation between `rpcpassword` and `rpc-password`.
 
-If and only if counterpartyd is to be run on the Bitcoin testnet, with the
-`--testnet` CLI option, Bitcoind must be set to do the same (`-testnet=1`).
-counterpartyd may run with the `--testcoin` option on any blockchain,
+If and only if worldpartyd is to be run on the Worldcoin testnet, with the
+`--testnet` CLI option, Worldcoind must be set to do the same (`-testnet=1`).
+worldpartyd may run with the `--testcoin` option on any blockchain,
 however.
 
 # Updating your requirements
 
-Sometimes the underlying package requirements may change for `counterpartyd`. If you build and installed it from scratch,
+Sometimes the underlying package requirements may change for `worldpartyd`. If you build and installed it from scratch,
 you can manually update these requirements by executing something like:
 ```
     pip install --upgrade -r pip-requirements.txt 
@@ -66,20 +66,20 @@ you can manually update these requirements by executing something like:
 # Test suite
 
 The test suite is invoked with `py.test` in the root directory of the repository.
-Bitcoind testnet and mainnet must run on the default ports and use the same rpcuser and rpcpassword. 
-Do not include the following values ​​in counterpartyd.conf: bitcoind-rpc-connect, bitcoind-rpc-port, rpc-host, rpc-port and testnet.
+Worldcoind testnet and mainnet must run on the default ports and use the same rpcuser and rpcpassword. 
+Do not include the following values ​​in worldpartyd.conf: bitcoind-rpc-connect, bitcoind-rpc-port, rpc-host, rpc-port and testnet.
 
 # Usage
-The command‐line syntax of counterpartyd is generally that of
-`./counterpartyd.py {OPTIONS} ACTION {ACTION-OPTIONS}`. There is a one action
+The command‐line syntax of worldpartyd is generally that of
+`./worldpartyd.py {OPTIONS} ACTION {ACTION-OPTIONS}`. There is a one action
 per message type, which action produces and broadcasts such a message; the
 message parameters are specified following the name of the message type. There
 are also actions which do not correspond to message types, but rather exist to
-provide information about the state of the Counterparty network, e.g. current
+provide information about the state of the Worldparty network, e.g. current
 balances or open orders.
 
 For a summary of the command‐line arguments and options, see
-`./counterpartyd.py --help`.
+`./worldpartyd.py --help`.
 
 # Versioning
 * Major version changes require a full rebuild of the database.
@@ -91,7 +91,7 @@ For a summary of the command‐line arguments and options, see
 * Quantities of indivisible assets are written as integers.
 * All other quantities, i.e. prices, odds, leverages, feed values and target
 values, fee multipliers, are specified to four decimal places.
-* counterpartyd identifies an Order, Bet, Order Match or Bet Match by an
+* worldpartyd identifies an Order, Bet, Order Match or Bet Match by an
 ‘Order ID’, ‘Bet ID’, ‘Order Match ID’, or ‘Bet Match ID’, respectively. Match
 IDs are concatenations of the hashes of the two transactions which compose the
 corresponding Match, in the order of their appearances in the blockchain.
@@ -102,7 +102,7 @@ The following examples are abridged for parsimony.
 
 * Server
 
-	The `server` command should always be running in the background. All other commands will fail if the index of the last block in the database is less than that of the last block seen by Bitcoind.
+	The `server` command should always be running in the background. All other commands will fail if the index of the last block in the database is less than that of the last block seen by Worldcoind.
 
 * Burn
 
@@ -115,29 +115,29 @@ The following examples are abridged for parsimony.
 	--to=n3BrDB6zDiEPWEE6wLxywFb4Yp9ZY5fHM7
 	```
 
-* Buy BTC for XCP
+* Buy WDC for XBJ
 	
 	```
-	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=BTC
-	--give-quantity=20 --give-asset=XCP --expiration=10 --fee_required=.001
+	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=WDC
+	--give-quantity=20 --give-asset=XBJ --expiration=10 --fee_required=.001
 	```
 
-* Buy BBBC for BTC
+* Buy BBBC for WDC
 
 	```
 	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=BBBC
-	--give-quantity=20 --give-asset=BTC --expiration=10 --fee_provided=0.001
+	--give-quantity=20 --give-asset=WDC --expiration=10 --fee_provided=0.001
 	```
 
-* Buy XCP for BBBC
+* Buy XBJ for BBBC
 	```
-	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=XCP
+	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=XBJ
 	--give-quantity=20 --give-asset=BBBC --expiration=10
 	```
 
-* BTCPay
+* WDCPay
 	```
-	btcpay --source=-source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --order-match-id=092f15d36786136c4d868c33356ec3c9b5a0c77de54ed0e96a8dbdd8af160c23
+	wdcpay --source=-source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --order-match-id=092f15d36786136c4d868c33356ec3c9b5a0c77de54ed0e96a8dbdd8af160c23
 	```
 
 * Issue
@@ -148,18 +148,18 @@ The following examples are abridged for parsimony.
 
 * Broadcast
 	```
-	broadcast --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --text="Bitcoin price feed" --value=825.22
+	broadcast --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --text="Worldcoin price feed" --value=825.22
 	--fee-multiplier=0.001
 	```
 
-	Note: for some users counterpartyd has trouble parsing spaces in the `--text` argument. One workaround is to
-		add an additional set of quotes. For example, `--text='"Bitcoin price feed"'`.
+	Note: for some users worldpartyd has trouble parsing spaces in the `--text` argument. One workaround is to
+		add an additional set of quotes. For example, `--text='"Worldcoin price feed"'`.
 
 * Bet
 	
 	Equal/Not Equal Bet:
 	
-	Example: Bet on Super Bowl Feed. Denver vs. Seattle. Feed value of 1 means Seattle Wins. Feed value of 2 means 	        	Denver Wins. This command places a 1 XCP bet on the Super Bowl Feed for Seattle to win, paying out 2 to         	1. The bet will expire in 100 blocks and the settlement value of the bet is based on the first feed 	                update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern Standard Time (UTC-0500)
+	Example: Bet on Super Bowl Feed. Denver vs. Seattle. Feed value of 1 means Seattle Wins. Feed value of 2 means 	        	Denver Wins. This command places a 1 XBJ bet on the Super Bowl Feed for Seattle to win, paying out 2 to         	1. The bet will expire in 100 blocks and the settlement value of the bet is based on the first feed 	                update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern Standard Time (UTC-0500)
 	```
 	bet --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --feed-address=n3BrDB6zDiEPWEE6wLxywFb4Yp9ZY5fH --bet-type=Equal
 	--deadline=2014-02-03T13:39:00-0500 --wager=1 --counterwager=2 --target-value=1 --expiration=100
@@ -167,7 +167,7 @@ The following examples are abridged for parsimony.
 
 	Contract for Difference:
 	
-	Example: Bet on Bitcoin Price Feed. This command places a bearish (short) 1 XCP wager on the price of BTC/USD 				with 2X leverage. The bet will expire in 100 blocks and the settlement value of the bet is based 			on the first feed update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern 					Standard Time (UTC-0500)
+	Example: Bet on Worldcoin Price Feed. This command places a bearish (short) 1 XBJ wager on the price of WDC/USD 				with 2X leverage. The bet will expire in 100 blocks and the settlement value of the bet is based 			on the first feed update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern 					Standard Time (UTC-0500)
 	```
 	bet --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --feed-address=n3BrDB6zDiEPWEE6wLxywFb4Yp9ZY5fH --bet-type=BearCFD --deadline=2014-02-03T13:39:00-0500 --wager=1 --counterwager=1 --leverage=10080 --expiration=100
 	```
@@ -200,25 +200,25 @@ The following examples are abridged for parsimony.
 
 * Market
 
-	The `market` action prints out tables of open orders, open bets, feeds, and order matches currently awaiting 	        Bitcoin payments from one of your addresses. 
+	The `market` action prints out tables of open orders, open bets, feeds, and order matches currently awaiting 	        Worldcoin payments from one of your addresses. 
 	
 	It is capable of filtering orders by assets to be bought and sold.
 	
 	Example:
 	
-	To filter the market to only show offers to sell (give) BTC:
+	To filter the market to only show offers to sell (give) WDC:
 	```
-	market --give-asset=BTC
-	```
-	
-	To filter the market to only show offers to buy (get) BTC:
-	```
-	market --get-asset=BTC
+	market --give-asset=WDC
 	```
 	
-	To filter the market to only show offers to sell BTC for XCP:
+	To filter the market to only show offers to buy (get) WDC:
 	```
-	market --give-asset=BTC --get-asset=XCP
+	market --get-asset=WDC
+	```
+	
+	To filter the market to only show offers to sell WDC for XBJ:
+	```
+	market --give-asset=WDC --get-asset=XBJ
 	```
 
 * Asset
@@ -227,5 +227,5 @@ The following examples are abridged for parsimony.
 
 * Address
 
-	The `address` action displays the details of of all transactions involving the Counterparty address which is its argument.
+	The `address` action displays the details of of all transactions involving the Worldparty address which is its argument.
 

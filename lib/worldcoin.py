@@ -1,6 +1,6 @@
 """
-Craft, sign and broadcast Bitcoin transactions.
-Interface with Bitcoind.
+Craft, sign and broadcast Worldcoin transactions.
+Interface with Worldcoind.
 """
 
 import os
@@ -46,7 +46,7 @@ def pubkey_to_pubkeyhash(pubkey):
     pubkey = base58_check_encode(binascii.hexlify(pubkeyhash).decode('utf-8'), config.ADDRESSVERSION)
     return pubkey
 def pubkeyhash_to_pubkey(pubkeyhash):
-    # TODO: convert to python-bitcoinlib.
+    # TODO: convert to python-worldcoinlib.
     raw_transactions = search_raw_transactions(pubkeyhash)
     for tx in raw_transactions:
         for vin in tx['vin']:
@@ -66,7 +66,7 @@ def multisig_pubkeyhashes_to_pubkeys(address):
     address = '_'.join([str(signatures_required)] + sorted(pubkeys) + [str(len(pubkeys))])
     return address
 
-bitcoin_rpc_session = None
+worldcoin_rpc_session = None
 
 def print_coin(coin):
     return 'amount: {}; txid: {}; vout: {}; confirmations: {}'.format(coin['amount'], coin['txid'], coin['vout'], coin.get('confirmations', '?')) # simplify and make deterministic
@@ -111,28 +111,28 @@ def get_mempool ():
 def list_unspent ():
     return rpc('listunspent', [0, 999999])
 def backend_check (db):
-    """Checks blocktime of last block to see if {} Core is running behind.""".format(config.BTC_NAME)
+    """Checks blocktime of last block to see if {} Core is running behind.""".format(config.WDC_NAME)
     block_count = get_block_count()
     block_hash = get_block_hash(block_count)
     block = get_block(block_hash)
     time_behind = time.time() - block['time']   # TODO: Block times are not very reliable.
     if time_behind > 60 * 60 * 2:   # Two hours.
-        raise exceptions.BitcoindError('Bitcoind is running about {} seconds behind.'.format(round(time_behind)))
+        raise exceptions.WorldcoindError('Worldcoind is running about {} seconds behind.'.format(round(time_behind)))
 
 
 def connect (url, payload, headers):
-    global bitcoin_rpc_session
-    if not bitcoin_rpc_session: bitcoin_rpc_session = requests.Session()
+    global worldcoin_rpc_session
+    if not worldcoin_rpc_session: worldcoin_rpc_session = requests.Session()
     TRIES = 12
     for i in range(TRIES):
         try:
-            response = bitcoin_rpc_session.post(url, data=json.dumps(payload), headers=headers, verify=config.BACKEND_RPC_SSL_VERIFY)
+            response = worldcoin_rpc_session.post(url, data=json.dumps(payload), headers=headers, verify=config.BACKEND_RPC_SSL_VERIFY)
             if i > 0: print('Successfully connected.', file=sys.stderr)
             return response
         except requests.exceptions.SSLError as e:
             raise e
         except requests.exceptions.ConnectionError:
-            logging.debug('Could not connect to Bitcoind. (Try {}/{})'.format(i+1, TRIES))
+            logging.debug('Could not connect to Worldcoind. (Try {}/{})'.format(i+1, TRIES))
             time.sleep(5)
     return None
 
@@ -142,7 +142,7 @@ def wallet_unlock ():
         if getinfo['unlocked_until'] >= 60:
             return True # Wallet is unlocked for at least the next 60 seconds.
         else:
-            passphrase = getpass.getpass('Enter your Bitcoind[‐Qt] wallet passhrase: ')
+            passphrase = getpass.getpass('Enter your Worldcoind[‐Qt] wallet passhrase: ')
             print('Unlocking wallet for 60 (more) seconds.')
             rpc('walletpassphrase', [passphrase, 60])
     else:
@@ -162,31 +162,31 @@ def rpc (method, params):
     if response == None:
         if config.TESTNET: network = 'testnet'
         else: network = 'mainnet'
-        raise exceptions.BitcoindRPCError('Cannot communicate with {} Core. ({} is set to run on {}, is {} Core?)'.format(config.BTC_NAME, config.XCP_CLIENT, network, config.BTC_NAME))
+        raise exceptions.WorldcoindRPCError('Cannot communicate with {} Core. ({} is set to run on {}, is {} Core?)'.format(config.WDC_NAME, config.XBJ_CLIENT, network, config.WDC_NAME))
     elif response.status_code not in (200, 500):
-        raise exceptions.BitcoindRPCError(str(response.status_code) + ' ' + response.reason)
+        raise exceptions.WorldcoindRPCError(str(response.status_code) + ' ' + response.reason)
 
     # Return result, with error handling.
     response_json = response.json()
     if 'error' not in response_json.keys() or response_json['error'] == None:
         return response_json['result']
     elif response_json['error']['code'] == -5:   # RPC_INVALID_ADDRESS_OR_KEY
-        raise exceptions.BitcoindError('{} Is txindex enabled in {} Core?'.format(response_json['error'], config.BTC_NAME))
+        raise exceptions.WorldcoindError('{} Is txindex enabled in {} Core?'.format(response_json['error'], config.WDC_NAME))
     elif response_json['error']['code'] == -4:   # Unknown private key (locked wallet?)
         # If address in wallet, attempt to unlock.
         address = params[0]
         if is_valid(address):
             if is_mine(address):
-                raise exceptions.BitcoindError('Wallet is locked.')
+                raise exceptions.WorldcoindError('Wallet is locked.')
             else:   # When will this happen?
-                raise exceptions.BitcoindError('Source address not in wallet.')
+                raise exceptions.WorldcoindError('Source address not in wallet.')
         else:
             raise exceptions.AddressError('Invalid address. (Multi‐signature?)')
     elif response_json['error']['code'] == -1 and response_json['message'] == 'Block number out of range.':
         time.sleep(10)
         return get_block_hash(block_index)
     else:
-        raise exceptions.BitcoindError('{}'.format(response_json['error']))
+        raise exceptions.WorldcoindError('{}'.format(response_json['error']))
 
 def validate_address(address, block_index):
     addresses = address.split('_')
@@ -516,7 +516,7 @@ def transaction (db, tx_info, encoding='auto', fee_per_kb=config.DEFAULT_FEE_PER
         if encoding == 'auto':
             if len(data) <= 40:
                 # encoding = 'opreturn'
-                encoding = 'multisig'   # BTCGuild isn’t mining OP_RETURN?!
+                encoding = 'multisig'   # WDCGuild isn’t mining OP_RETURN?!
             else:
                 encoding = 'multisig'
 
@@ -565,7 +565,7 @@ def transaction (db, tx_info, encoding='auto', fee_per_kb=config.DEFAULT_FEE_PER
     # Check that the source is in wallet.
     if encoding in ('multisig') and not self_public_key and not multisig_source:
         if not is_mine(source):
-            raise exceptions.AddressError('Not one of your Bitcoin addresses:', source)
+            raise exceptions.AddressError('Not one of your Worldcoin addresses:', source)
 
     # Check that the destination output isn't a dust output.
     # Set null values to dust size.
@@ -605,13 +605,13 @@ def transaction (db, tx_info, encoding='auto', fee_per_kb=config.DEFAULT_FEE_PER
     else:
         data_array = []
 
-    # Calculate total BTC to be sent.
-    btc_out = 0
+    # Calculate total WDC to be sent.
+    wdc_out = 0
     if encoding == 'multisig': data_value = multisig_dust_size
     elif encoding == 'opreturn': data_value = op_return_value
     else: data_value = regular_dust_size # Pay‐to‐PubKeyHash
-    btc_out = sum([data_value for data_chunk in data_array])
-    btc_out += sum([value for address, value in destination_outputs])
+    wdc_out = sum([data_value for data_chunk in data_array])
+    wdc_out += sum([value for address, value in destination_outputs])
 
     # Get size of outputs.
     if encoding == 'multisig': data_output_size = 81        # 71 for the data
@@ -624,16 +624,16 @@ def transaction (db, tx_info, encoding='auto', fee_per_kb=config.DEFAULT_FEE_PER
     unspent = sort_unspent_txouts(unspent, allow_unconfirmed_inputs)
     logging.debug('Sorted UTXOs: {}'.format([print_coin(coin) for coin in unspent]))
 
-    inputs, btc_in = [], 0
+    inputs, wdc_in = [], 0
     change_quantity = 0
     sufficient_funds = False
     final_fee = fee_per_kb
     for coin in unspent:
         logging.debug('New input: {}'.format(print_coin(coin)))
         inputs.append(coin)
-        btc_in += round(coin['amount'] * config.UNIT)
+        wdc_in += round(coin['amount'] * config.UNIT)
 
-        # If exact fee is specified, use that. Otherwise, calculate size of tx and base fee on that (plus provide a minimum fee for selling BTC).
+        # If exact fee is specified, use that. Otherwise, calculate size of tx and base fee on that (plus provide a minimum fee for selling WDC).
         if exact_fee:
             final_fee = exact_fee
         else:
@@ -643,15 +643,15 @@ def transaction (db, tx_info, encoding='auto', fee_per_kb=config.DEFAULT_FEE_PER
             assert final_fee >= 1 * fee_per_kb
 
         # Check if good.
-        change_quantity = btc_in - (btc_out + final_fee)
-        logging.debug('Change quantity: {} BTC'.format(change_quantity / config.UNIT))
+        change_quantity = wdc_in - (wdc_out + final_fee)
+        logging.debug('Change quantity: {} WDC'.format(change_quantity / config.UNIT))
         if change_quantity == 0 or change_quantity >= regular_dust_size: # If change is necessary, must not be a dust output.
             sufficient_funds = True
             break
     if not sufficient_funds:
         # Approximate needed change, fee by with most recently calculated quantities.
-        total_btc_out = btc_out + max(change_quantity, 0) + final_fee
-        raise exceptions.BalanceError('Insufficient bitcoins at address {}. (Need approximately {} {}.) To spend unconfirmed coins, use the flag `--unconfirmed`. (Unconfirmed coins cannot be spent from multi‐sig addresses.)'.format(source, total_btc_out / config.UNIT, config.BTC))
+        total_wdc_out = wdc_out + max(change_quantity, 0) + final_fee
+        raise exceptions.BalanceError('Insufficient worldcoins at address {}. (Need approximately {} {}.) To spend unconfirmed coins, use the flag `--unconfirmed`. (Unconfirmed coins cannot be spent from multi‐sig addresses.)'.format(source, total_wdc_out / config.UNIT, config.WDC))
 
     # Construct outputs.
     if data: data_output = (data_array, data_value)
@@ -686,27 +686,27 @@ def sign_tx (unsigned_tx_hex, private_key_wif=None):
     """Sign unsigned transaction serialisation."""
 
     if private_key_wif:
-        # TODO: Hack! (pybitcointools is Python 2 only)
+        # TODO: Hack! (pyworldcointools is Python 2 only)
         import subprocess
         i = 0
         tx_hex = unsigned_tx_hex
-        while True: # pybtctool doesn’t implement `signall`
+        while True: # pywdctool doesn’t implement `signall`
             try:
-                tx_hex = subprocess.check_output(['pybtctool', 'sign', tx_hex, str(i), private_key_wif], stderr=subprocess.DEVNULL)
+                tx_hex = subprocess.check_output(['pywdctool', 'sign', tx_hex, str(i), private_key_wif], stderr=subprocess.DEVNULL)
             except Exception as e:
                 break
         if tx_hex != unsigned_tx_hex:
             signed_tx_hex = tx_hex.decode('utf-8')
             return signed_tx_hex[:-1]   # Get rid of newline.
         else:
-            raise exceptions.TransactionError('Could not sign transaction with pybtctool.')
+            raise exceptions.TransactionError('Could not sign transaction with pywdctool.')
 
     else:   # Assume source is in wallet and wallet is unlocked.
         result = sign_raw_transaction(unsigned_tx_hex)
         if result['complete']:
             signed_tx_hex = result['hex']
         else:
-            raise exceptions.TransactionError('Could not sign transaction with Bitcoin Core.')
+            raise exceptions.TransactionError('Could not sign transaction with Worldcoin Core.')
 
     return signed_tx_hex
 
@@ -718,8 +718,8 @@ def normalize_quantity(quantity, divisible=True):
         return float((D(quantity) / D(config.UNIT)).quantize(D('.00000000'), rounding=decimal.ROUND_HALF_EVEN))
     else: return quantity
 
-def get_btc_supply(normalize=False):
-    """returns the total supply of {} (based on what Bitcoin Core says the current block height is)""".format(config.BTC)
+def get_wdc_supply(normalize=False):
+    """returns the total supply of {} (based on what Worldcoin Core says the current block height is)""".format(config.WDC)
     block_count = get_block_count()
     blocks_remaining = block_count
     total_supply = 0

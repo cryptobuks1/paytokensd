@@ -27,9 +27,9 @@ class MempoolError (TransactionError):
 class RPCError (Exception):
     pass
 
-class BitcoindError (Exception):
+class WorldcoindError (Exception):
     pass
-class BitcoindRPCError (BitcoindError):
+class WorldcoindRPCError (WorldcoindError):
     pass
 class InsightError (Exception):
     pass
@@ -80,7 +80,7 @@ class IssuanceError (MessageError):
     pass
 class DividendError (MessageError):
     pass
-class BTCPayError (MessageError):
+class WDCPayError (MessageError):
     pass
 class CancelError (MessageError):
     pass

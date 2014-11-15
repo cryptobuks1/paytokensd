@@ -9,9 +9,9 @@ from fixtures.vectors import UNITTEST_VECTOR
 from fixtures.params import DEFAULT_PARAMS
 from fixtures.scenarios import INTEGRATION_SCENARIOS
 
-from lib import config, bitcoin
+from lib import config, worldcoin
 
-import bitcoin as bitcoinlib
+import worldcoin as worldcoinlib
 
 def pytest_generate_tests(metafunc):
     if metafunc.function.__name__ == 'test_vector':
@@ -87,7 +87,7 @@ def init_mock_functions(monkeypatch, rawtransactions_db):
 
     def decode_raw_transaction(raw_transaction):
         if pytest.config.option.initrawtransactions or pytest.config.option.saverawtransactions:
-            return bitcoin.rpc('decoderawtransaction', [raw_transaction])
+            return worldcoin.rpc('decoderawtransaction', [raw_transaction])
         else:
             return util_test.decoderawtransaction(rawtransactions_db, raw_transaction)
 
@@ -97,18 +97,18 @@ def init_mock_functions(monkeypatch, rawtransactions_db):
 
         def getrawtransaction(self, txid):
             tx_hex = util_test.getrawtransaction(rawtransactions_db, txid)
-            ctx = bitcoinlib.core.CTransaction.deserialize(binascii.unhexlify(tx_hex))
+            ctx = worldcoinlib.core.CTransaction.deserialize(binascii.unhexlify(tx_hex))
             return ctx
 
-    monkeypatch.setattr('lib.bitcoin.get_unspent_txouts', get_unspent_txouts)
-    monkeypatch.setattr('lib.bitcoin.get_private_key', get_private_key)
-    monkeypatch.setattr('lib.bitcoin.is_mine', is_mine)
+    monkeypatch.setattr('lib.worldcoin.get_unspent_txouts', get_unspent_txouts)
+    monkeypatch.setattr('lib.worldcoin.get_private_key', get_private_key)
+    monkeypatch.setattr('lib.worldcoin.is_mine', is_mine)
     monkeypatch.setattr('lib.util.isodt', isodt)
     monkeypatch.setattr('lib.util.curr_time', curr_time)
     monkeypatch.setattr('lib.util.date_passed', date_passed)
     monkeypatch.setattr('lib.api.init_api_access_log', init_api_access_log)
     if hasattr(config, 'PREFIX'):
         monkeypatch.setattr('lib.config.PREFIX', b'TESTXXXX')
-    monkeypatch.setattr('lib.bitcoin.multisig_pubkeyhashes_to_pubkeys', multisig_pubkeyhashes_to_pubkeys)
-    monkeypatch.setattr('lib.bitcoin.decode_raw_transaction', decode_raw_transaction)
-    monkeypatch.setattr('bitcoin.rpc.Proxy', RpcProxy)
+    monkeypatch.setattr('lib.worldcoin.multisig_pubkeyhashes_to_pubkeys', multisig_pubkeyhashes_to_pubkeys)
+    monkeypatch.setattr('lib.worldcoin.decode_raw_transaction', decode_raw_transaction)
+    monkeypatch.setattr('worldcoin.rpc.Proxy', RpcProxy)

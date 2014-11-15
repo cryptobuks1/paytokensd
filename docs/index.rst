@@ -1,16 +1,16 @@
-counterpartyd
+worldpartyd
 ==================================================
 
-Counterparty is a protocol for the creation and use of decentralised financial instruments such as asset
-exchanges, contracts for difference and dividend payments. It uses Bitcoin as a transport layer.
-The Counterparty protocol specification may be found `here <https://github.com/CounterpartyXCP/Counterparty>`__.
+Worldparty is a protocol for the creation and use of decentralised financial instruments such as asset
+exchanges, contracts for difference and dividend payments. It uses Worldcoin as a transport layer.
+The Worldparty protocol specification may be found `here <https://github.com/WorldpartyXBJ/Worldparty>`__.
 
-``counterpartyd`` is the reference client (and server daemon) implementation of the Counterparty protocol.
+``worldpartyd`` is the reference client (and server daemon) implementation of the Worldparty protocol.
 
-To get ``counterpartyd`` installed and set up on your computer, you have two options:
+To get ``worldpartyd`` installed and set up on your computer, you have two options:
 
-- Set it up manually, using the instructions `here <https://github.com/CounterpartyXCP/counterpartyd/blob/master/README.md>`__
-- For Windows and Ubuntu Linux users, you can use the `automated build system <http://counterparty.io/docs/build-system/>`__
+- Set it up manually, using the instructions `here <https://github.com/WorldpartyXBJ/worldpartyd/blob/master/README.md>`__
+- For Windows and Ubuntu Linux users, you can use the `automated build system <http://worldparty.io/docs/build-system/>`__
 
 
 Table of Contents

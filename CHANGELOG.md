@@ -114,7 +114,7 @@
 	* improved algorithm for choosing unspent txouts in transaction construction
 	* allow the unconfirmed inputs CLI option
 * v9.16
-	* regular version, database, Bitcoind checking in API
+	* regular version, database, Worldcoind checking in API
 	* better testcoin support
 	* simplify version checking (combined DB and client versions), which necessitates skipping versions
 	* simplify betting fees: just deduct from pot at settlement (protocol change: retroactive)
@@ -125,12 +125,12 @@
 	* fully floating transaction fees
 	* lots of miscellaneous bug fixes
 	* replenish fee_required_remaining on order match expiration (protocol change: 297000)
-	* transaction signing for source addresses not in Bitcoin Core wallet
+	* transaction signing for source addresses not in Worldcoin Core wallet
 	* tweaks to API
 * v6.13
 	* miscellaneous bug fixes
 	* add some sanity checks
-	* partially allow for CLI input of private keys (to bypass Bitcoind wallet)
+	* partially allow for CLI input of private keys (to bypass Worldcoind wallet)
 	* tweak the API
 	* fill out the test suite a bit
 	* temporarily double the default fee to .0002 BTC

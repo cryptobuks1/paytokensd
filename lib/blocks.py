@@ -1,7 +1,7 @@
 """
 Initialise database.
 
-Sieve blockchain for Counterparty transactions, and add them to the database.
+Sieve blockchain for Worldparty transactions, and add them to the database.
 """
 
 import os
@@ -14,17 +14,17 @@ import logging
 import collections
 from Crypto.Cipher import ARC4
 import apsw
-import bitcoin as bitcoinlib
-import bitcoin.rpc as bitcoinlib_rpc
+import worldcoin as worldcoinlib
+import worldcoin.rpc as worldcoinlib_rpc
 
-from . import (config, exceptions, util, bitcoin)
-from . import (send, order, btcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
+from . import (config, exceptions, util, worldcoin)
+from . import (send, order, wdcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
 
 # Order matters for FOREIGN KEY constraints.
 TABLES = ['credits', 'debits', 'messages'] + \
          ['bet_match_resolutions', 'order_match_expirations',
           'order_matches', 'order_expirations', 'orders', 'bet_match_expirations',
-          'bet_matches', 'bet_expirations', 'bets', 'broadcasts', 'btcpays',
+          'bet_matches', 'bet_expirations', 'bets', 'broadcasts', 'wdcpays',
           'burns', 'callbacks', 'cancels', 'dividends', 'issuances', 'sends',
           'rps_match_expirations', 'rps_expirations', 'rpsresolves', 'rps_matches', 'rps']
 
@@ -72,8 +72,8 @@ def parse_tx (db, tx):
         send.parse(db, tx, message)
     elif message_type_id == order.ID:
         order.parse(db, tx, message)
-    elif message_type_id == btcpay.ID:
-        btcpay.parse(db, tx, message)
+    elif message_type_id == wdcpay.ID:
+        wdcpay.parse(db, tx, message)
     elif message_type_id == issuance.ID:
         issuance.parse(db, tx, message)
     elif message_type_id == broadcast.ID:
@@ -214,7 +214,7 @@ def initialise(db):
                       block_time INTEGER,
                       source TEXT,
                       destination TEXT,
-                      btc_amount INTEGER,
+                      wdc_amount INTEGER,
                       fee INTEGER,
                       data BLOB,
                       supported BOOL DEFAULT 1,
@@ -407,27 +407,27 @@ def initialise(db):
                       tx1_address_idx ON order_matches (tx1_address)
                    ''')
 
-    # BTCpays
-    cursor.execute('''CREATE TABLE IF NOT EXISTS btcpays(
+    # WDCpays
+    cursor.execute('''CREATE TABLE IF NOT EXISTS wdcpays(
                       tx_index INTEGER PRIMARY KEY,
                       tx_hash TEXT UNIQUE,
                       block_index INTEGER,
                       source TEXT,
                       destination TEXT,
-                      btc_amount INTEGER,
+                      wdc_amount INTEGER,
                       order_match_id TEXT,
                       status TEXT,
                       FOREIGN KEY (tx_index, tx_hash, block_index) REFERENCES transactions(tx_index, tx_hash, block_index))
                    ''')
                       # Disallows invalids: FOREIGN KEY (order_match_id) REFERENCES order_matches(id))
     cursor.execute('''CREATE INDEX IF NOT EXISTS
-                      block_index_idx ON btcpays (block_index)
+                      block_index_idx ON wdcpays (block_index)
                    ''')
     cursor.execute('''CREATE INDEX IF NOT EXISTS
-                      source_idx ON btcpays (source)
+                      source_idx ON wdcpays (source)
                    ''')
     cursor.execute('''CREATE INDEX IF NOT EXISTS
-                      destination_idx ON btcpays (destination)
+                      destination_idx ON wdcpays (destination)
                    ''')
 
     # Issuances
@@ -907,10 +907,10 @@ def get_tx_info (tx, block_index):
         pubkeyhash = get_pubkeyhash(scriptpubkey)
         if not pubkeyhash: return False
 
-        address = bitcoin.base58_check_encode(pubkeyhash, config.ADDRESSVERSION)
+        address = worldcoin.base58_check_encode(pubkeyhash, config.ADDRESSVERSION)
 
         # Test decoding of address.
-        if address != config.UNSPENDABLE and binascii.unhexlify(bytes(pubkeyhash, 'utf-8')) != bitcoin.base58_check_decode(address, config.ADDRESSVERSION):
+        if address != config.UNSPENDABLE and binascii.unhexlify(bytes(pubkeyhash, 'utf-8')) != worldcoin.base58_check_decode(address, config.ADDRESSVERSION):
             return False
 
         return address
@@ -919,7 +919,7 @@ def get_tx_info (tx, block_index):
     fee = 0
 
     # Get destination output and data output.
-    destination, btc_amount, data = None, None, b''
+    destination, wdc_amount, data = None, None, b''
     pubkeyhash_encoding = False
     for vout in tx['vout']:
         fee -= vout['value'] * config.UNIT
@@ -956,11 +956,11 @@ def get_tx_info (tx, block_index):
                     data += data_chunk
 
         # Destination is the first output before the data.
-        if not destination and not btc_amount and not data:
+        if not destination and not wdc_amount and not data:
             address = get_address(vout['scriptPubKey'])
             if address:
                 destination = address
-                btc_amount = round(vout['value'] * config.UNIT) # Floats are awful.
+                wdc_amount = round(vout['value'] * config.UNIT) # Floats are awful.
 
     # Check for, and strip away, prefix (except for burns).
     if destination == config.UNSPENDABLE:
@@ -978,7 +978,7 @@ def get_tx_info (tx, block_index):
     source_list = []
     for vin in tx['vin']:                                               # Loop through input transactions.
         if 'coinbase' in vin: raise exceptions.DecodeError('coinbase transaction')
-        vin_tx = bitcoin.get_raw_transaction(vin['txid'])     # Get the full transaction data for this input transaction.
+        vin_tx = worldcoin.get_raw_transaction(vin['txid'])     # Get the full transaction data for this input transaction.
         vout = vin_tx['vout'][vin['vout']]
         fee += vout['value'] * config.UNIT
 
@@ -990,7 +990,7 @@ def get_tx_info (tx, block_index):
     if all(x == source_list[0] for x in source_list): source = source_list[0]
     else: source = None
 
-    return source, destination, btc_amount, round(fee), data
+    return source, destination, wdc_amount, round(fee), data
 
 def get_tx_info2 (tx, block_index):
     """
@@ -1000,9 +1000,9 @@ def get_tx_info2 (tx, block_index):
 
     # Decode transaction binary.
     if config.TESTNET:
-        bitcoinlib.SelectParams('testnet')
-    rpc = bitcoinlib_rpc.Proxy(service_url=config.BACKEND_RPC)
-    ctx = rpc.getrawtransaction(bitcoinlib.core.lx(tx['txid']))
+        worldcoinlib.SelectParams('testnet')
+    rpc = worldcoinlib_rpc.Proxy(service_url=config.BACKEND_RPC)
+    ctx = rpc.getrawtransaction(worldcoinlib.core.lx(tx['txid']))
 
     def arc4_decrypt (cyphertext):
         '''Un‐obfuscate. Initialise key once per attempt.'''
@@ -1013,11 +1013,11 @@ def get_tx_info2 (tx, block_index):
         try:
             asm = []
             for op in scriptpubkey:
-                if type(op) == bitcoinlib.core.script.CScriptOp:
+                if type(op) == worldcoinlib.core.script.CScriptOp:
                     asm.append(str(op))
                 else:
                     asm.append(op)
-        except bitcoinlib.core.script.CScriptTruncatedPushDataError:
+        except worldcoinlib.core.script.CScriptTruncatedPushDataError:
             raise exceptions.DecodeError('invalid pushdata due to truncation')
         if not asm:
             raise exceptions.DecodeError('empty output')
@@ -1070,7 +1070,7 @@ def get_tx_info2 (tx, block_index):
             destination, data = None, chunk[len(config.PREFIX):]
         else:                                                       # Destination
             pubkeyhash = binascii.hexlify(pubkeyhash).decode('utf-8')
-            destination, data = bitcoin.base58_check_encode(pubkeyhash, config.ADDRESSVERSION), None
+            destination, data = worldcoin.base58_check_encode(pubkeyhash, config.ADDRESSVERSION), None
 
         return destination, data
 
@@ -1086,7 +1086,7 @@ def get_tx_info2 (tx, block_index):
             chunk = chunk[1:chunk_length + 1]
             destination, data = None, chunk[len(config.PREFIX):]
         else:                                                       # Destination
-            pubkeyhashes = [bitcoin.pubkey_to_pubkeyhash(pubkey) for pubkey in pubkeys]
+            pubkeyhashes = [worldcoin.pubkey_to_pubkeyhash(pubkey) for pubkey in pubkeys]
             destination, data = '_'.join([str(signatures_required)] + sorted(pubkeyhashes) + [str(len(pubkeyhashes))]), None
 
         return destination, data
@@ -1095,7 +1095,7 @@ def get_tx_info2 (tx, block_index):
     if ctx.is_coinbase(): raise exceptions.DecodeError('coinbase transaction')
 
     # Get destinations and data outputs.
-    destinations, btc_amount, fee, data = [], 0, 0, b''
+    destinations, wdc_amount, fee, data = [], 0, 0, b''
     for vout in ctx.vout:
         # Fee is the input values minus output values.
         output_value = vout.nValue
@@ -1116,7 +1116,7 @@ def get_tx_info2 (tx, block_index):
         # All destinations come before all data.
         if not data and not new_data and destinations != [config.UNSPENDABLE,]:
             destinations.append(new_destination)
-            btc_amount += output_value
+            wdc_amount += output_value
         else:
             if new_destination:     # Change.
                 break
@@ -1146,7 +1146,7 @@ def get_tx_info2 (tx, block_index):
 
     sources = '-'.join(sources)
     destinations = '-'.join(destinations)
-    return sources, destinations, btc_amount, round(fee), data
+    return sources, destinations, wdc_amount, round(fee), data
 
 
 def reparse (db, block_index=None, quiet=False):
@@ -1206,7 +1206,7 @@ def reparse (db, block_index=None, quiet=False):
 
 def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
     # Get the important details about each transaction.
-    tx = bitcoin.get_raw_transaction(tx_hash)
+    tx = worldcoin.get_raw_transaction(tx_hash)
     logging.debug('Status: examining transaction {}.'.format(tx_hash))
 
     try:
@@ -1217,7 +1217,7 @@ def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
     except exceptions.DecodeError as e:
         logging.debug('Could not decode: ' + str(e))
         tx_info = b'', None, None, None, None
-    source, destination, btc_amount, fee, data = tx_info
+    source, destination, wdc_amount, fee, data = tx_info
 
     # For mempool
     if block_hash == None:
@@ -1234,7 +1234,7 @@ def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
                             block_time,
                             source,
                             destination,
-                            btc_amount,
+                            wdc_amount,
                             fee,
                             data) VALUES(?,?,?,?,?,?,?,?,?,?)''',
                             (tx_index,
@@ -1244,7 +1244,7 @@ def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
                              block_time,
                              source,
                              destination,
-                             btc_amount,
+                             wdc_amount,
                              fee,
                              data)
                       )
@@ -1270,7 +1270,7 @@ def follow (db):
             logging.info('Status: client minor version number mismatch ({} ≠ {}).'.format(minor_version, config.VERSION_MINOR))
             reparse(db, quiet=False)
         logging.info('Status: Connecting to backend.')
-        bitcoin.get_info()
+        worldcoin.get_info()
         logging.info('Status: Resuming parsing.')
 
     except exceptions.DatabaseError:
@@ -1295,7 +1295,7 @@ def follow (db):
     while True:
         starttime = time.time()
         # Get new blocks.
-        block_count = bitcoin.get_block_count()
+        block_count = worldcoin.get_block_count()
         if block_index <= block_count:
 
             # Backwards check for incorrect blocks due to chain reorganisation, and stop when a common parent is found.
@@ -1304,10 +1304,10 @@ def follow (db):
             while True:
                 if c == config.BLOCK_FIRST: break
 
-                # Bitcoind parent hash.
-                c_hash = bitcoin.get_block_hash(c)
-                c_block = bitcoin.get_block(c_hash)
-                bitcoind_parent = c_block['previousblockhash']
+                # Worldcoind parent hash.
+                c_hash = worldcoin.get_block_hash(c)
+                c_block = worldcoin.get_block(c_hash)
+                worldcoind_parent = c_block['previousblockhash']
 
                 # DB parent hash.
                 blocks = list(cursor.execute('''SELECT * FROM blocks
@@ -1316,7 +1316,7 @@ def follow (db):
                 db_parent = blocks[0]['block_hash']
 
                 # Compare.
-                if db_parent == bitcoind_parent:
+                if db_parent == worldcoind_parent:
                     break
                 else:
                     c -= 1
@@ -1334,8 +1334,8 @@ def follow (db):
                 continue
 
             # Get and parse transactions in this block (atomically).
-            block_hash = bitcoin.get_block_hash(block_index)
-            block = bitcoin.get_block(block_hash)
+            block_hash = worldcoin.get_block_hash(block_index)
+            block = worldcoin.get_block(block_hash)
             block_time = block['time']
             tx_hash_list = block['tx']
             with db:
@@ -1368,7 +1368,7 @@ def follow (db):
             
             logging.info('Block: %s (%ss)'%(str(block_index), "{:.2f}".format(time.time() - starttime, 3)))
             # Increment block index.
-            block_count = bitcoin.get_block_count()
+            block_count = worldcoin.get_block_count()
             block_index +=1
 
         else:
@@ -1378,7 +1378,7 @@ def follow (db):
             else:
                 logging.debug('Status: Initialising mempool.')
 
-            # Get old counterpartyd mempool.
+            # Get old worldpartyd mempool.
             old_mempool = list(cursor.execute('''SELECT * FROM mempool'''))
             old_mempool_hashes = [message['tx_hash'] for message in old_mempool]
 
@@ -1386,14 +1386,14 @@ def follow (db):
             curr_time = int(time.time())
             mempool_tx_index = tx_index
 
-            # For each transaction in Bitcoin Core mempool, if it’s new, create
+            # For each transaction in Worldcoin Core mempool, if it’s new, create
             # a fake block, a fake transaction, capture the generated messages,
             # and then save those messages.
             # Every transaction in mempool is parsed independently. (DB is rolled back after each one.)
             mempool = []
-            for tx_hash in bitcoin.get_mempool():
+            for tx_hash in worldcoin.get_mempool():
 
-                # If already in counterpartyd mempool, copy to new one.
+                # If already in worldpartyd mempool, copy to new one.
                 if tx_hash in old_mempool_hashes:
                     for message in old_mempool:
                         if message['tx_hash'] == tx_hash:
@@ -1416,10 +1416,10 @@ def follow (db):
                                           )
 
                             # List transaction.
-                            try:    # Sometimes the transactions can’t be found: `{'code': -5, 'message': 'No information available about transaction'} Is txindex enabled in Bitcoind?`
+                            try:    # Sometimes the transactions can’t be found: `{'code': -5, 'message': 'No information available about transaction'} Is txindex enabled in Worldcoind?`
                                 list_tx(db, None, block_index, curr_time, tx_hash, mempool_tx_index)
                                 mempool_tx_index += 1
-                            except exceptions.BitcoindError:
+                            except exceptions.WorldcoindError:
                                 raise exceptions.MempoolError
 
                             # Parse transaction.
@@ -1437,7 +1437,7 @@ def follow (db):
                             else:
                                 # If a transaction hasn’t been added to the
                                 # table `transactions`, then it’s not a
-                                # Counterparty transaction.
+                                # Worldparty transaction.
                                 not_supported[tx_hash] = ''
                                 not_supported_sorted.append((block_index, tx_hash))
                                 raise exceptions.MempoolError
