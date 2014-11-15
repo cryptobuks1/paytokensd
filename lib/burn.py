@@ -39,11 +39,11 @@ def compose (db, source, quantity, overburn=False):
     problems = validate(db, source, destination, quantity, util.last_block(db)['block_index'], overburn=overburn)
     if problems: raise exceptions.BurnError(problems)
 
-    # Check that a maximum of 1 WDC total is burned per address.
+    # Check that a maximum of 1,000,000 WDC total is burned per address.
     burns = list(cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', source)))
     already_burned = sum([burn['burned'] for burn in burns])
-    if quantity > (1 * config.UNIT - already_burned) and not overburn:
-        raise exceptions.BurnError('1 {} may be burned per address'.format(config.WDC))
+    if quantity > (config.MAX_BURN_BY_ADDRESS * config.UNIT - already_burned) and not overburn:
+        raise exceptions.BurnError('1,000,000 {} may be burned per address'.format(config.WDC))
 
     cursor.close()
     return (source, [(destination, quantity)], None)
@@ -62,19 +62,19 @@ def parse (db, tx, message=None):
             sent = 0
 
     if status == 'valid':
-        # Calculate quantity of XBJ earned. (Maximum 1 WDC in total, ever.)
+        # Calculate quantity of XBJ earned. (Maximum 1,000,000 WDC in total, ever.)
         cursor = db.cursor()
         cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', tx['source']))
         burns = cursor.fetchall()
         already_burned = sum([burn['burned'] for burn in burns])
-        ONE = 1 * config.UNIT
+        ONE = config.MAX_BURN_BY_ADDRESS * config.UNIT
         max_burn = ONE - already_burned
         if sent > max_burn: burned = max_burn   # Exceeded maximum burn; earn what you can.
         else: burned = sent
 
         total_time = config.BURN_END - config.BURN_START
         partial_time = config.BURN_END - tx['block_index']
-        multiplier = (1000 + (500 * Fraction(partial_time, total_time)))
+        multiplier = config.BURN_MULTIPLIER * (1 + (.5 * Fraction(partial_time, total_time)))
         earned = round(burned * multiplier)
 
         # Credit source address with earned XBJ.

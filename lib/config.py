@@ -41,21 +41,21 @@ WDC_CLIENT = 'worldcoind'
 XBJ_NAME = 'Worldparty'
 XBJ_CLIENT = 'worldpartyd'
 
-DEFAULT_RPC_PORT_TESTNET = 14000
-DEFAULT_RPC_PORT = 4000
+DEFAULT_RPC_PORT_TESTNET = 19700
+DEFAULT_RPC_PORT = 9700
 
 DEFAULT_BACKEND_RPC_PORT_TESTNET = 18332
-DEFAULT_BACKEND_RPC_PORT = 8332
+DEFAULT_BACKEND_RPC_PORT = 11081
 
 UNSPENDABLE_TESTNET = 'mvWorldcoinAllianceXXXXXXXXXXW24Hef'
-UNSPENDABLE_MAINNET = 'WorldcoinAllianceXXXXXXXXXXXUWLpVr'
+UNSPENDABLE_MAINNET = 'Wor1dcoinA11ianceXXXXXXXXXXXXvvY9T'
 
 ADDRESSVERSION_TESTNET = b'\x6f'
-PRIVATEKEY_VERSION_TESTNET = b'\xef'
-ADDRESSVERSION_MAINNET = b'\x00'
-PRIVATEKEY_VERSION_MAINNET = b'\x80'
-MAGIC_BYTES_TESTNET = b'\xfa\xbf\xb5\xda'   # For bip-0010
-MAGIC_BYTES_MAINNET = b'\xf9\xbe\xb4\xd9'   # For bip-0010
+# PRIVATEKEY_VERSION_TESTNET = b'\xef'
+ADDRESSVERSION_MAINNET = b'\x49'
+# PRIVATEKEY_VERSION_MAINNET = b'\xc9'
+MAGIC_BYTES_TESTNET = b'\xed\xb2\xa8\xcd'   # For bip-0010
+MAGIC_BYTES_MAINNET = b'\xfb\xc0\xb6\xdb'   # For bip-0010
 
 BLOCK_FIRST_TESTNET_TESTCOIN = 154908
 BURN_START_TESTNET_TESTCOIN = 154908
@@ -69,13 +69,16 @@ BLOCK_FIRST_MAINNET_TESTCOIN = 278270
 BURN_START_MAINNET_TESTCOIN = 278310
 BURN_END_MAINNET_TESTCOIN = 2500000     # A long time.
 
-BLOCK_FIRST_MAINNET = 278270
-BURN_START_MAINNET = 278310
-BURN_END_MAINNET = 283810
+BLOCK_FIRST_MAINNET = 927831
+BURN_START_MAINNET = 927831
+BURN_END_MAINNET = 102528000 # About 100 Years
+
+MAX_BURN_BY_ADDRESS = 1000000 * UNIT 	# 1M WDC.
+BURN_MULTIPLIER = 10000
 
 
 # Protocol defaults
-# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in counterblockd/lib/config.py as well
+# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in worldblockd/lib/config.py as well
     # TODO: This should be updated, given their new configurability.
 # TODO: The dust values should be lowered by 90%, once transactions with smaller outputs start confirming faster: <https://github.com/mastercoin-MSC/spec/issues/192>
 DEFAULT_REGULAR_DUST_SIZE = 5430         # TODO: This is just a guess. I got it down to 5530 satoshis.
