@@ -128,13 +128,14 @@ def generate_consensus_hash(db, block_index, field, strings, check_hash_pos, pre
     if not current_hash:
       current_hash = get_hash(block_index)
 
+	# TODO set checkpoints
     # check checkpoints and save block block_hash
     checkpoints = config.CHECKPOINTS_TESTNET if config.TESTNET else config.CHECKPOINTS_MAINNET
-    if (block_index in checkpoints and checkpoints[block_index][check_hash_pos] != block_hash) or (current_hash and current_hash != block_hash):
-        raise exceptions.ConsensusError('Incorrect {} for block {}.'.format(field, block_index))
-    elif not current_hash:
-        sql = '''UPDATE blocks SET {} = ? WHERE block_index = ?'''.format(field)
-        cursor.execute(sql, (block_hash, block_index))
+    #if (block_index in checkpoints and checkpoints[block_index][check_hash_pos] != block_hash) or (current_hash and current_hash != block_hash):
+    #    raise exceptions.ConsensusError('Incorrect {} for block {}.'.format(field, block_index))
+    #elif not current_hash:
+    #    sql = '''UPDATE blocks SET {} = ? WHERE block_index = ?'''.format(field)
+    #    cursor.execute(sql, (block_hash, block_index))
 
     cursor.close()
 

@@ -77,14 +77,17 @@ MAX_BURN_BY_ADDRESS = 1000000 * UNIT 	# 1M WDC.
 BURN_MULTIPLIER = 10000
 
 
+# Issuance Fee
+DEFAULT_ISSUANCE_FEE = 10000
+
 # Protocol defaults
 # NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in worldblockd/lib/config.py as well
     # TODO: This should be updated, given their new configurability.
 # TODO: The dust values should be lowered by 90%, once transactions with smaller outputs start confirming faster: <https://github.com/mastercoin-MSC/spec/issues/192>
-DEFAULT_REGULAR_DUST_SIZE = 5430         # TODO: This is just a guess. I got it down to 5530 satoshis.
-DEFAULT_MULTISIG_DUST_SIZE = 7800        # <https://worldcointalk.org/index.php?topic=528023.msg7469941#msg7469941>
-DEFAULT_OP_RETURN_VALUE = 0
-DEFAULT_FEE_PER_KB = 10000                # Worldcoin Core default is 10000.  # TODO: Lower 10x later, too.
+DEFAULT_REGULAR_DUST_SIZE = UNIT 	  # 1 WDC; there is not dust limit in Worldcoin, but every txout < 1 WDC, cost 1 WDC in fee
+DEFAULT_MULTISIG_DUST_SIZE = UNIT * 2 # 2 WDC.
+DEFAULT_OP_RETURN_VALUE = 0 		  # 0 WDC.
+DEFAULT_FEE_PER_KB = UNIT             # 1 WDC.
 
 
 # UI defaults
