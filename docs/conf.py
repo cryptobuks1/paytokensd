@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# worldpartyd documentation build configuration file, created by
+# bluejudyd documentation build configuration file, created by
 # sphinx-quickstart on Mon Jan 20 15:45:40 2014.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'worldpartyd'
+project = u'bluejudyd'
 copyright = u'2014, Counterparty Team, Treefunder Incorporated'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'worldpartyddoc'
+htmlhelp_basename = 'bluejudyddoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,8 +183,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'worldpartyd.tex', u'worldpartyd Documentation',
-   u'Worldparty Team', 'manual'),
+  ('index', 'bluejudyd.tex', u'bluejudyd Documentation',
+   u'Bluejudy Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,8 +213,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'worldpartyd', u'worldpartyd Documentation',
-     [u'Worldparty Team'], 1)
+    ('index', 'bluejudyd', u'bluejudyd Documentation',
+     [u'Bluejudy Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'worldpartyd', u'worldpartyd Documentation',
-   u'Worldparty Team', 'worldpartyd', 'One line description of project.',
+  ('index', 'bluejudyd', u'bluejudyd Documentation',
+   u'Bluejudy Team', 'bluejudyd', 'One line description of project.',
    'Miscellaneous'),
 ]
 

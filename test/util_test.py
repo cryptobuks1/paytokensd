@@ -9,7 +9,7 @@ sys.path.append(os.path.normpath(os.path.join(CURR_DIR, '..')))
 from lib import (config, api, util, exceptions, worldcoin, blocks)
 from lib import (send, order, wdcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
 from lib.exceptions import ConsensusError
-import worldpartyd
+import bluejudyd
 
 from fixtures.params import DEFAULT_PARAMS as DP
 from fixtures.scenarios import UNITEST_FIXTURE, INTEGRATION_SCENARIOS, standard_scenarios_params
@@ -128,7 +128,7 @@ def insert_transaction(transaction, db):
 # we use the same database (in memory) for speed
 def initialise_rawtransactions_db(db):
     if pytest.config.option.initrawtransactions:
-        worldpartyd.set_options(testnet=True, **COUNTERPARTYD_OPTIONS)
+        bluejudyd.set_options(testnet=True, **COUNTERPARTYD_OPTIONS)
         cursor = db.cursor()
         cursor.execute('DROP TABLE  IF EXISTS raw_transactions')
         cursor.execute('CREATE TABLE IF NOT EXISTS raw_transactions(tx_hash TEXT UNIQUE, tx_hex TEXT, tx_json TEXT)')
@@ -167,7 +167,7 @@ def initialise_db(db):
     insert_block(db, config.BURN_START - 1)
 
 def run_scenario(scenario, rawtransactions_db):
-    worldpartyd.set_options(database_file=':memory:', testnet=True, **COUNTERPARTYD_OPTIONS)
+    bluejudyd.set_options(database_file=':memory:', testnet=True, **COUNTERPARTYD_OPTIONS)
     config.PREFIX = b'TESTXXXX'
     config.FIRST_MULTISIG_BLOCK_TESTNET = 1
     config.CHECKPOINTS_TESTNET = {}
@@ -229,8 +229,8 @@ def clean_scenario_dump(scenario_name, dump):
     dump = re.sub('X\'[A-F0-9]+\',1\);', '\'data\',1)', dump)
     return dump
 
-def check_record(record, worldpartyd_db):
-    cursor = worldpartyd_db.cursor()
+def check_record(record, bluejudyd_db):
+    cursor = bluejudyd_db.cursor()
 
     sql  = '''SELECT COUNT(*) AS c FROM {} '''.format(record['table'])
     sql += '''WHERE '''
@@ -263,26 +263,26 @@ def vector_to_args(vector, functions=[]):
                     args.append((tx_name, method, params['in'], outputs, error, records))
     return args
 
-def exec_tested_method(tx_name, method, tested_method, inputs, worldpartyd_db):
+def exec_tested_method(tx_name, method, tested_method, inputs, bluejudyd_db):
     if tx_name == 'worldcoin' and method == 'transaction':
-        return tested_method(worldpartyd_db, inputs[0], **inputs[1])
+        return tested_method(bluejudyd_db, inputs[0], **inputs[1])
     elif tx_name == 'util' and method == 'api':
         return tested_method(*inputs)
     elif tx_name == 'worldcoin' and method == 'base58_check_decode':
         return binascii.hexlify(tested_method(*inputs)).decode('utf-8')
     else:
-        return tested_method(worldpartyd_db, *inputs)
+        return tested_method(bluejudyd_db, *inputs)
 
-def check_ouputs(tx_name, method, inputs, outputs, error, records, worldpartyd_db):
+def check_ouputs(tx_name, method, inputs, outputs, error, records, bluejudyd_db):
     tested_module = sys.modules['lib.{}'.format(tx_name)]
     tested_method = getattr(tested_module, method)
     
     test_outputs = None
     if error is not None:
         with pytest.raises(getattr(exceptions, error[0])) as exception:
-            test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, worldpartyd_db)
+            test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, bluejudyd_db)
     else:
-        test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, worldpartyd_db)
+        test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, bluejudyd_db)
         if pytest.config.option.gentxhex and method == 'compose':
             print('')
             tx_params = {
@@ -291,7 +291,7 @@ def check_ouputs(tx_name, method, inputs, outputs, error, records, worldpartyd_d
             if tx_name == 'order' and inputs[1]=='WDC':
                 print('give wdc')
                 tx_params['fee_provided'] = DP['fee_provided']
-            unsigned_tx_hex = worldcoin.transaction(worldpartyd_db, test_outputs, **tx_params)
+            unsigned_tx_hex = worldcoin.transaction(bluejudyd_db, test_outputs, **tx_params)
             print(tx_name)
             print(unsigned_tx_hex)
 
@@ -301,7 +301,7 @@ def check_ouputs(tx_name, method, inputs, outputs, error, records, worldpartyd_d
         assert str(exception.value) == error[1]
     if records is not None:
         for record in records:
-            check_record(record, worldpartyd_db)
+            check_record(record, bluejudyd_db)
 
 def compare_strings(string1, string2):
     diff = list(difflib.unified_diff(string1.splitlines(1), string2.splitlines(1), n=0))
@@ -329,7 +329,7 @@ def get_block_txlist(db, block_index):
 def reparse(testnet=True):
     options = dict(COUNTERPARTYD_OPTIONS)
     options.pop('data_dir')
-    worldpartyd.set_options(database_file=':memory:', testnet=testnet, **options)
+    bluejudyd.set_options(database_file=':memory:', testnet=testnet, **options)
     
     if testnet:
         config.PREFIX = b'TESTXXXX'

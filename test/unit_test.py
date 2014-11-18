@@ -7,10 +7,10 @@ from fixtures.vectors import UNITTEST_VECTOR
 from fixtures.params import DEFAULT_PARAMS as DP
 
 from lib import (config, util, api)
-import worldpartyd
+import bluejudyd
 
 def setup_module():
-    worldpartyd.set_options(database_file=tempfile.gettempdir() + '/fixtures.unittest.db', testnet=True, **util_test.COUNTERPARTYD_OPTIONS)
+    bluejudyd.set_options(database_file=tempfile.gettempdir() + '/fixtures.unittest.db', testnet=True, **util_test.COUNTERPARTYD_OPTIONS)
     util_test.restore_database(config.DATABASE, CURR_DIR + '/fixtures/scenarios/unittest_fixture.sql')
     config.FIRST_MULTISIG_BLOCK_TESTNET = 1
     # start RPC server
@@ -29,15 +29,15 @@ def teardown_module(function):
     util_test.remove_database_files(config.DATABASE)
 
 @pytest.fixture
-def worldpartyd_db(request):
+def bluejudyd_db(request):
     db = util.connect_to_db()
     cursor = db.cursor()
     cursor.execute('''BEGIN''')
     request.addfinalizer(lambda: cursor.execute('''ROLLBACK'''))
     return db
 
-def test_vector(tx_name, method, inputs, outputs, error, records, worldpartyd_db):
+def test_vector(tx_name, method, inputs, outputs, error, records, bluejudyd_db):
     if method == 'parse':
-        util_test.insert_transaction(inputs[0], worldpartyd_db)
+        util_test.insert_transaction(inputs[0], bluejudyd_db)
         inputs += (inputs[0]['data'][4:],) # message arg
-    util_test.check_ouputs(tx_name, method, inputs, outputs, error, records, worldpartyd_db)
+    util_test.check_ouputs(tx_name, method, inputs, outputs, error, records, bluejudyd_db)

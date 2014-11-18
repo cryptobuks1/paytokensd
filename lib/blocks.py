@@ -1,7 +1,7 @@
 """
 Initialise database.
 
-Sieve blockchain for Worldparty transactions, and add them to the database.
+Sieve blockchain for Bluejudy transactions, and add them to the database.
 """
 
 import os
@@ -1379,7 +1379,7 @@ def follow (db):
             else:
                 logging.debug('Status: Initialising mempool.')
 
-            # Get old worldpartyd mempool.
+            # Get old bluejudyd mempool.
             old_mempool = list(cursor.execute('''SELECT * FROM mempool'''))
             old_mempool_hashes = [message['tx_hash'] for message in old_mempool]
 
@@ -1394,7 +1394,7 @@ def follow (db):
             mempool = []
             for tx_hash in worldcoin.get_mempool():
 
-                # If already in worldpartyd mempool, copy to new one.
+                # If already in bluejudyd mempool, copy to new one.
                 if tx_hash in old_mempool_hashes:
                     for message in old_mempool:
                         if message['tx_hash'] == tx_hash:
@@ -1438,7 +1438,7 @@ def follow (db):
                             else:
                                 # If a transaction hasn’t been added to the
                                 # table `transactions`, then it’s not a
-                                # Worldparty transaction.
+                                # Bluejudy transaction.
                                 not_supported[tx_hash] = ''
                                 not_supported_sorted.append((block_index, tx_hash))
                                 raise exceptions.MempoolError

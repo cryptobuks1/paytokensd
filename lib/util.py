@@ -354,7 +354,7 @@ def connect_to_db(flags=None):
 
 def version_check (db):
     try:
-        host = 'https://raw.githubusercontent.com/Bluejudy/worldpartyd/evolve/version.json'
+        host = 'https://raw.githubusercontent.com/Bluejudy/bluejudyd/evolve/version.json'
         response = requests.get(host, headers={'cache-control': 'no-cache'})
         versions = json.loads(response.text)
     except Exception as e:
@@ -372,7 +372,7 @@ def version_check (db):
                 passed = False
 
     if not passed:
-        explanation = 'Your version of worldpartyd is v{}, but, as of block {}, the minimum version is v{}.{}.{}. Reason: ‘{}’. Please upgrade to the latest version and restart the server.'.format(
+        explanation = 'Your version of bluejudyd is v{}, but, as of block {}, the minimum version is v{}.{}.{}. Reason: ‘{}’. Please upgrade to the latest version and restart the server.'.format(
             config.VERSION_STRING, versions['block_index'], versions['minimum_version_major'], versions['minimum_version_minor'],
             versions['minimum_version_revision'], versions['reason'])
         if last_block(db)['block_index'] >= versions['block_index']:

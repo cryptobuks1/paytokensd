@@ -14,7 +14,7 @@ VERSION_REVISION = 0
 VERSION_STRING = str(VERSION_MAJOR) + '.' + str(VERSION_MINOR) + '.' + str(VERSION_REVISION)
 
 
-# Worldparty protocol
+# Bluejudy protocol
 TXTYPE_FORMAT = '>I'
 
 TWO_WEEKS = 2 * 7 * 24 * 3600
@@ -38,8 +38,8 @@ XBJ = 'XBJ'
 
 WDC_NAME = 'Worldcoin'
 WDC_CLIENT = 'worldcoind'
-XBJ_NAME = 'Worldparty'
-XBJ_CLIENT = 'worldpartyd'
+XBJ_NAME = 'Bluejudy'
+XBJ_CLIENT = 'bluejudyd'
 
 DEFAULT_RPC_PORT_TESTNET = 19700
 DEFAULT_RPC_PORT = 9700
@@ -81,7 +81,7 @@ BURN_MULTIPLIER = 10000
 DEFAULT_ISSUANCE_FEE = 10000
 
 # Protocol defaults
-# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in worldblockd/lib/config.py as well
+# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in blueblockd/lib/config.py as well
     # TODO: This should be updated, given their new configurability.
 # TODO: The dust values should be lowered by 90%, once transactions with smaller outputs start confirming faster: <https://github.com/mastercoin-MSC/spec/issues/192>
 DEFAULT_REGULAR_DUST_SIZE = UNIT 	  # 1 WDC; there is not dust limit in Worldcoin, but every txout < 1 WDC, cost 1 WDC in fee
