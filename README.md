@@ -1,38 +1,38 @@
-[![Build Status](https://travis-ci.org/WorldpartyXBJ/worldpartyd.svg?branch=develop)](https://travis-ci.org/WorldpartyXBJ/worldpartyd)
+[![Build Status](https://travis-ci.org/BluejudyXBJ/bluejudyd.svg?branch=develop)](https://travis-ci.org/BluejudyXBJ/bluejudyd)
 
 # Description
-Worldparty is a protocol for the creation and use of decentralised financial
+Bluejudy is a protocol for the creation and use of decentralised financial
 instruments such as asset exchanges, contracts for difference and dividend
 payments. It uses Worldcoin as a transport layer. The contents of this
-repository, `worldpartyd`, constitute the reference implementation of the
+repository, `bluejudyd`, constitute the reference implementation of the
 protocol.
 
-The Worldparty protocol specification may be found at
-<https://github.com/WorldpartyXBJ/Worldparty>.
+The Bluejudy protocol specification may be found at
+<https://github.com/BluejudyXBJ/Bluejudy>.
 
 # Dependencies
 * [Python 3](http://python.org)
-* Python 3 packages: apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, tornado, flask, Flask-HTTPAuth, pycoin, pyzmq(v2.2+), pycrypto, lockfile, python-bitcoinlib (see [this link](https://github.com/WorldpartyXBJ/worldpartyd/blob/master/pip-requirements.txt) for exact working versions)
+* Python 3 packages: apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, tornado, flask, Flask-HTTPAuth, pycoin, pyzmq(v2.2+), pycrypto, lockfile, python-bitcoinlib (see [this link](https://github.com/BluejudyXBJ/bluejudyd/blob/master/pip-requirements.txt) for exact working versions)
 * Worldcoind
 
 # Installation
 
-**NOTE: This section covers manual installation of worldpartyd. If you want more of
-an automated approach to worldpartyd installation for Windows and Linux, see [this link](http://worldparty.io/docs/build-system/).**
+**NOTE: This section covers manual installation of bluejudyd. If you want more of
+an automated approach to bluejudyd installation for Windows and Linux, see [this link](http://bluejudy.io/docs/build-system/).**
 
-In order for worldpartyd to function, it must be able to communicate with a
+In order for bluejudyd to function, it must be able to communicate with a
 running instance of Worldcoind or Worldcoin-Qt, which handles many Worldcoin‐specific
 matters on its behalf, including all wallet and private key management. For
 such interoperability, Worldcoind must be run with the following options:
 `-txindex=1` `-server=1`. This may require the setting of a JSON‐RPC password,
 which may be saved in Worldcoind’s configuration file.
 
-worldpartyd needs to know at least the JSON‐RPC password of the Worldcoind with
+bluejudyd needs to know at least the JSON‐RPC password of the Worldcoind with
 which it is supposed to communicate. The simplest way to set this is to
-include it in all command‐line invocations of worldpartyd, such as
-`./worldpartyd.py --rpc-password=PASSWORD ACTION`. To make this and other
-options persistent across worldpartyd sessions, one may store the desired
-settings in a configuration file specific to worldpartyd.
+include it in all command‐line invocations of bluejudyd, such as
+`./bluejudyd.py --rpc-password=PASSWORD ACTION`. To make this and other
+options persistent across bluejudyd sessions, one may store the desired
+settings in a configuration file specific to bluejudyd.
 
 Note that the syntaxes for the countpartyd and the Worldcoind configuraion
 files are not the same. A Worldcoind configuration file looks like this:
@@ -43,21 +43,21 @@ files are not the same. A Worldcoind configuration file looks like this:
 	txindex=1
 	server=1
 
-However, a worldpartyd configuration file looks like this:
+However, a bluejudyd configuration file looks like this:
 
 	[Default]
 	bitcoind-rpc-password=PASSWORD
 
 Note the change in hyphenation between `rpcpassword` and `rpc-password`.
 
-If and only if worldpartyd is to be run on the Worldcoin testnet, with the
+If and only if bluejudyd is to be run on the Worldcoin testnet, with the
 `--testnet` CLI option, Worldcoind must be set to do the same (`-testnet=1`).
-worldpartyd may run with the `--testcoin` option on any blockchain,
+bluejudyd may run with the `--testcoin` option on any blockchain,
 however.
 
 # Updating your requirements
 
-Sometimes the underlying package requirements may change for `worldpartyd`. If you build and installed it from scratch,
+Sometimes the underlying package requirements may change for `bluejudyd`. If you build and installed it from scratch,
 you can manually update these requirements by executing something like:
 ```
     pip install --upgrade -r pip-requirements.txt 
@@ -67,19 +67,19 @@ you can manually update these requirements by executing something like:
 
 The test suite is invoked with `py.test` in the root directory of the repository.
 Worldcoind testnet and mainnet must run on the default ports and use the same rpcuser and rpcpassword. 
-Do not include the following values ​​in worldpartyd.conf: bitcoind-rpc-connect, bitcoind-rpc-port, rpc-host, rpc-port and testnet.
+Do not include the following values ​​in bluejudyd.conf: bitcoind-rpc-connect, bitcoind-rpc-port, rpc-host, rpc-port and testnet.
 
 # Usage
-The command‐line syntax of worldpartyd is generally that of
-`./worldpartyd.py {OPTIONS} ACTION {ACTION-OPTIONS}`. There is a one action
+The command‐line syntax of bluejudyd is generally that of
+`./bluejudyd.py {OPTIONS} ACTION {ACTION-OPTIONS}`. There is a one action
 per message type, which action produces and broadcasts such a message; the
 message parameters are specified following the name of the message type. There
 are also actions which do not correspond to message types, but rather exist to
-provide information about the state of the Worldparty network, e.g. current
+provide information about the state of the Bluejudy network, e.g. current
 balances or open orders.
 
 For a summary of the command‐line arguments and options, see
-`./worldpartyd.py --help`.
+`./bluejudyd.py --help`.
 
 # Versioning
 * Major version changes require a full rebuild of the database.
@@ -91,7 +91,7 @@ For a summary of the command‐line arguments and options, see
 * Quantities of indivisible assets are written as integers.
 * All other quantities, i.e. prices, odds, leverages, feed values and target
 values, fee multipliers, are specified to four decimal places.
-* worldpartyd identifies an Order, Bet, Order Match or Bet Match by an
+* bluejudyd identifies an Order, Bet, Order Match or Bet Match by an
 ‘Order ID’, ‘Bet ID’, ‘Order Match ID’, or ‘Bet Match ID’, respectively. Match
 IDs are concatenations of the hashes of the two transactions which compose the
 corresponding Match, in the order of their appearances in the blockchain.
@@ -152,7 +152,7 @@ The following examples are abridged for parsimony.
 	--fee-multiplier=0.001
 	```
 
-	Note: for some users worldpartyd has trouble parsing spaces in the `--text` argument. One workaround is to
+	Note: for some users bluejudyd has trouble parsing spaces in the `--text` argument. One workaround is to
 		add an additional set of quotes. For example, `--text='"Worldcoin price feed"'`.
 
 * Bet
@@ -227,5 +227,5 @@ The following examples are abridged for parsimony.
 
 * Address
 
-	The `address` action displays the details of of all transactions involving the Worldparty address which is its argument.
+	The `address` action displays the details of of all transactions involving the Bluejudy address which is its argument.
 

@@ -1,4 +1,4 @@
-#worldparty dependencies (installed via pip)
+#bluejudy dependencies (installed via pip)
 
 appdirs==1.2.0
 #helps locate OS-specific directories (user data dir, etc)
@@ -14,7 +14,7 @@ json-rpc==1.6.0
 pytest==2.5.1
 
 #############
-#worldpartyd specific deps
+#bluejudyd specific deps
 
 pycoin==0.51
 

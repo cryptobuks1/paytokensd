@@ -370,7 +370,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     ##############
     # THINGS WE SERVE
 
-    # worldpartyd API RPC host
+    # bluejudyd API RPC host
     if rpc_host:
         config.RPC_HOST = rpc_host
     elif has_config and 'rpc-host' in configfile['Default'] and configfile['Default']['rpc-host']:
@@ -378,7 +378,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     else:
         config.RPC_HOST = 'localhost'
 
-    # worldpartyd API RPC port
+    # bluejudyd API RPC port
     if rpc_port:
         config.RPC_PORT = rpc_port
     elif has_config and 'rpc-port' in configfile['Default'] and configfile['Default']['rpc-port']:
@@ -397,11 +397,11 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     try:
         config.RPC_PORT = int(config.RPC_PORT)
         if not (int(config.BACKEND_RPC_PORT) > 1 and int(config.BACKEND_RPC_PORT) < 65535):
-            raise exceptions.ConfigurationError('invalid worldpartyd API port number') 
+            raise exceptions.ConfigurationError('invalid bluejudyd API port number') 
     except:
         raise Exception("Please specific a valid port number rpc-port configuration parameter")
 
-    #  worldpartyd API RPC user
+    #  bluejudyd API RPC user
     if rpc_user:
         config.RPC_USER = rpc_user
     elif has_config and 'rpc-user' in configfile['Default'] and configfile['Default']['rpc-user']:
@@ -409,7 +409,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     else:
         config.RPC_USER = 'rpc'
 
-    #  worldpartyd API RPC password
+    #  bluejudyd API RPC password
     if rpc_password:
         config.RPC_PASSWORD = rpc_password
     elif has_config and 'rpc-password' in configfile['Default'] and configfile['Default']['rpc-password']:
@@ -755,7 +755,7 @@ if __name__ == '__main__':
     db = util.connect_to_db()
 
     # Version
-    logging.info('Status: Running v{} of worldpartyd.'.format(config.VERSION_STRING, config.XBJ_CLIENT))
+    logging.info('Status: Running v{} of bluejudyd.'.format(config.VERSION_STRING, config.XBJ_CLIENT))
     if not config.FORCE and args.action in ('server', 'reparse', 'rollback'):
         logging.info('Status: Checking version.')
         try:
