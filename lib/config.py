@@ -98,7 +98,7 @@ DEFAULT_FEE_FRACTION_PROVIDED = .01    # 1.00%
 # Custom exit codes
 EXITCODE_UPDATE_REQUIRED = 5
 
-CONSENSUS_HASH_SEED = 'We can only see a short distance ahead, but we can see plenty there that needs to be done.'
+CONSENSUS_HASH_SEED = 'How can you prove whether at this moment we are sleeping, and all our thoughts are a dream; or whether we are awake, and talking to one another in the waking state?'
 
 # (ledger_hash, txlist_hash)
 CHECKPOINTS_MAINNET = {
