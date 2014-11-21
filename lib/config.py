@@ -14,7 +14,7 @@ VERSION_REVISION = 0
 VERSION_STRING = str(VERSION_MAJOR) + '.' + str(VERSION_MINOR) + '.' + str(VERSION_REVISION)
 
 
-# Bluejudy protocol
+# Czarcraft protocol
 TXTYPE_FORMAT = '>I'
 
 TWO_WEEKS = 2 * 7 * 24 * 3600
@@ -28,34 +28,34 @@ MEMPOOL_BLOCK_INDEX = 9999999
 MAX_INT = 2**63 - 1
 
 
-# Worldcoin Core
+# Litecoin Core
 OP_RETURN_MAX_SIZE = 40 # bytes
 
 
 # Currency agnosticism
-WDC = 'WDC'
-XBJ = 'XBJ'
+LTC = 'LTC'
+DLA = 'DLA'
 
-WDC_NAME = 'Worldcoin'
-WDC_CLIENT = 'worldcoind'
-XBJ_NAME = 'Bluejudy'
-XBJ_CLIENT = 'bluejudyd'
+LTC_NAME = 'Litecoin'
+LTC_CLIENT = 'litecoind'
+DLA_NAME = 'Czarcraft'
+DLA_CLIENT = 'czarcraftd'
 
 DEFAULT_RPC_PORT_TESTNET = 19700
 DEFAULT_RPC_PORT = 9700
 
 DEFAULT_BACKEND_RPC_PORT_TESTNET = 18332
-DEFAULT_BACKEND_RPC_PORT = 11081
+DEFAULT_BACKEND_RPC_PORT = 8332
 
-UNSPENDABLE_TESTNET = 'mvWorldcoinAllianceXXXXXXXXXXW24Hef'
-#UNSPENDABLE_MAINNET = 'Wor1dcoinA11ianceXXXXXXXXXXXXvvY9T'
-UNSPENDABLE_MAINNET = 'WXEnhance1XXXXXXXXXXXXXXXXX1ZFGV4U'
+UNSPENDABLE_TESTNET = 'mvLitecoinAllianceXXXXXXXXXXW24Hef'
+UNSPENDABLE_MAINNET = 'LTCdominationxxxxxxxxxxxxxxxeNp6nT'
 
+# TODO: Update Testnet Specifications
 ADDRESSVERSION_TESTNET = b'\x6f'
-# PRIVATEKEY_VERSION_TESTNET = b'\xef'
-ADDRESSVERSION_MAINNET = b'\x49'
-# PRIVATEKEY_VERSION_MAINNET = b'\xc9'
-MAGIC_BYTES_TESTNET = b'\xed\xb2\xa8\xcd'   # For bip-0010
+PRIVATEKEY_VERSION_TESTNET = b'\xef'
+ADDRESSVERSION_MAINNET = b'\x30'
+PRIVATEKEY_VERSION_MAINNET = b'\xb0'
+MAGIC_BYTES_TESTNET = b'\xfc\xc1\xb7\xdc'   # For bip-0010
 MAGIC_BYTES_MAINNET = b'\xfb\xc0\xb6\xdb'   # For bip-0010
 
 BLOCK_FIRST_TESTNET_TESTCOIN = 154908
@@ -70,24 +70,24 @@ BLOCK_FIRST_MAINNET_TESTCOIN = 278270
 BURN_START_MAINNET_TESTCOIN = 278310
 BURN_END_MAINNET_TESTCOIN = 2500000     # A long time.
 
-BLOCK_FIRST_MAINNET = 1557957
-BURN_START_MAINNET = 1557958
-BURN_END_MAINNET = 102528000 # About 100 Years
+BLOCK_FIRST_MAINNET = 678281
+BURN_START_MAINNET = 678282
+BURN_END_MAINNET = 102528000 # TODO: Calculate Outcome
 
-MAX_BURN_BY_ADDRESS = 1000000 * UNIT 	# 1M WDC.
+MAX_BURN_BY_ADDRESS = 1000000 * UNIT 	# 1M LTC.
 BURN_MULTIPLIER = 1000
 
 # Issuance Fee
-DEFAULT_ISSUANCE_FEE = 10000
+DEFAULT_ISSUANCE_FEE = 1 # Initializing at One
 
 # Protocol defaults
-# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in blueblockd/lib/config.py as well
+# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in craftblockd/lib/config.py as well
     # TODO: This should be updated, given their new configurability.
 # TODO: The dust values should be lowered by 90%, once transactions with smaller outputs start confirming faster: <https://github.com/mastercoin-MSC/spec/issues/192>
-DEFAULT_REGULAR_DUST_SIZE = UNIT 	  # 1 WDC; there is not dust limit in Worldcoin, but every txout < 1 WDC, cost 1 WDC in fee
-DEFAULT_MULTISIG_DUST_SIZE = UNIT * 2 # 2 WDC.
-DEFAULT_OP_RETURN_VALUE = 0 		  # 0 WDC.
-DEFAULT_FEE_PER_KB = UNIT             # 1 WDC.
+DEFAULT_REGULAR_DUST_SIZE = 5011 	  # LTC;
+DEFAULT_MULTISIG_DUST_SIZE = 6011     # LTC.
+DEFAULT_OP_RETURN_VALUE = 0 		  # LTC.
+DEFAULT_FEE_PER_KB = 10000            # LTC.
 
 
 # UI defaults
@@ -98,7 +98,7 @@ DEFAULT_FEE_FRACTION_PROVIDED = .01    # 1.00%
 # Custom exit codes
 EXITCODE_UPDATE_REQUIRED = 5
 
-CONSENSUS_HASH_SEED = 'How can you prove whether at this moment we are sleeping, and all our thoughts are a dream; or whether we are awake, and talking to one another in the waking state?'
+CONSENSUS_HASH_SEED = 'Knowledge unqualified is knowledge simply of something learned.'
 
 # (ledger_hash, txlist_hash)
 CHECKPOINTS_MAINNET = {

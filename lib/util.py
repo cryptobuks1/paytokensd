@@ -37,7 +37,7 @@ def api (method, params):
     }
     response = requests.post(config.RPC, data=json.dumps(payload), headers=headers)
     if response == None:
-        raise exceptions.RPCError('Cannot communicate with {} server.'.format(config.XBJ_CLIENT))
+        raise exceptions.RPCError('Cannot communicate with {} server.'.format(config.DLA_CLIENT))
     elif response.status_code != 200:
         if response.status_code == 500:
             raise exceptions.RPCError('Malformed API call.')
@@ -100,13 +100,13 @@ def log (db, command, category, bindings):
             logging.info('Send: {} from {} to {} ({}) [{}]'.format(output(bindings['quantity'], bindings['asset']), bindings['source'], bindings['destination'], bindings['tx_hash'], bindings['status']))
 
         elif category == 'orders':
-            logging.info('Order: {} ordered {} for {} in {} blocks, with a provided fee of {} {} and a required fee of {} {} ({}) [{}]'.format(bindings['source'], output(bindings['give_quantity'], bindings['give_asset']), output(bindings['get_quantity'], bindings['get_asset']), bindings['expiration'], bindings['fee_provided'] / config.UNIT, config.WDC, bindings['fee_required'] / config.UNIT, config.WDC, bindings['tx_hash'], bindings['status']))
+            logging.info('Order: {} ordered {} for {} in {} blocks, with a provided fee of {} {} and a required fee of {} {} ({}) [{}]'.format(bindings['source'], output(bindings['give_quantity'], bindings['give_asset']), output(bindings['get_quantity'], bindings['get_asset']), bindings['expiration'], bindings['fee_provided'] / config.UNIT, config.LTC, bindings['fee_required'] / config.UNIT, config.LTC, bindings['tx_hash'], bindings['status']))
 
         elif category == 'order_matches':
             logging.info('Order Match: {} for {} ({}) [{}]'.format(output(bindings['forward_quantity'], bindings['forward_asset']), output(bindings['backward_quantity'], bindings['backward_asset']), bindings['id'], bindings['status']))
 
-        elif category == 'wdcpays':
-            logging.info('{} Payment: {} paid {} to {} for order match {} ({}) [{}]'.format(config.WDC, bindings['source'], output(bindings['wdc_amount'], config.WDC), bindings['destination'], bindings['order_match_id'], bindings['tx_hash'], bindings['status']))
+        elif category == 'ltcpays':
+            logging.info('{} Payment: {} paid {} to {} for order match {} ({}) [{}]'.format(config.LTC, bindings['source'], output(bindings['ltc_amount'], config.LTC), bindings['destination'], bindings['order_match_id'], bindings['tx_hash'], bindings['status']))
 
         elif category == 'issuances':
             if bindings['transfer']:
@@ -121,7 +121,7 @@ def log (db, command, category, bindings):
                     divisibility = 'indivisible'
                     unit = 1
                 if bindings['callable'] and (bindings['block_index'] > 283271 or config.TESTNET):   # Protocol change.
-                    callability = 'callable from {} for {} XBJ/{}'.format(isodt(bindings['call_date']), bindings['call_price'], bindings['asset'])
+                    callability = 'callable from {} for {} DLA/{}'.format(isodt(bindings['call_date']), bindings['call_price'], bindings['asset'])
                 else:
                     callability = 'uncallable'
                 try:
@@ -152,9 +152,9 @@ def log (db, command, category, bindings):
             end = 'in {} blocks ({}) [{}]'.format(bindings['expiration'], bindings['tx_hash'], bindings['status'])
 
             if 'CFD' not in BET_TYPE_NAME[bindings['bet_type']]:
-                log_message = 'Bet: {} against {}, by {}, on {} that ‘{}’ will {} {} at {}, {}'.format(output(bindings['wager_quantity'], config.XBJ), output(bindings['counterwager_quantity'], config.XBJ), bindings['source'], bindings['feed_address'], text, BET_TYPE_NAME[bindings['bet_type']], str(output(bindings['target_value'], 'value').split(' ')[0]), isodt(bindings['deadline']), end)
+                log_message = 'Bet: {} against {}, by {}, on {} that ‘{}’ will {} {} at {}, {}'.format(output(bindings['wager_quantity'], config.DLA), output(bindings['counterwager_quantity'], config.DLA), bindings['source'], bindings['feed_address'], text, BET_TYPE_NAME[bindings['bet_type']], str(output(bindings['target_value'], 'value').split(' ')[0]), isodt(bindings['deadline']), end)
             else:
-                log_message = 'Bet: {}, by {}, on {} for {} against {}, leveraged {}x, {}'.format(BET_TYPE_NAME[bindings['bet_type']], bindings['source'], bindings['feed_address'],output(bindings['wager_quantity'], config.XBJ), output(bindings['counterwager_quantity'], config.XBJ), output(bindings['leverage']/ 5040, 'leverage'), end)
+                log_message = 'Bet: {}, by {}, on {} for {} against {}, leveraged {}x, {}'.format(BET_TYPE_NAME[bindings['bet_type']], bindings['source'], bindings['feed_address'],output(bindings['wager_quantity'], config.DLA), output(bindings['counterwager_quantity'], config.DLA), output(bindings['leverage']/ 5040, 'leverage'), end)
 
             logging.info(log_message)
 
@@ -164,13 +164,13 @@ def log (db, command, category, bindings):
                 placeholder = ' that ' + str(output(bindings['target_value'], 'value'))
             if bindings['leverage']:
                 placeholder += ', leveraged {}x'.format(output(bindings['leverage'] / 5040, 'leverage'))
-            logging.info('Bet Match: {} for {} against {} for {} on {} at {}{} ({}) [{}]'.format(BET_TYPE_NAME[bindings['tx0_bet_type']], output(bindings['forward_quantity'], config.XBJ), BET_TYPE_NAME[bindings['tx1_bet_type']], output(bindings['backward_quantity'], config.XBJ), bindings['feed_address'], isodt(bindings['deadline']), placeholder, bindings['id'], bindings['status']))
+            logging.info('Bet Match: {} for {} against {} for {} on {} at {}{} ({}) [{}]'.format(BET_TYPE_NAME[bindings['tx0_bet_type']], output(bindings['forward_quantity'], config.DLA), BET_TYPE_NAME[bindings['tx1_bet_type']], output(bindings['backward_quantity'], config.DLA), bindings['feed_address'], isodt(bindings['deadline']), placeholder, bindings['id'], bindings['status']))
 
         elif category == 'dividends':
             logging.info('Dividend: {} paid {} per unit of {} ({}) [{}]'.format(bindings['source'], output(bindings['quantity_per_unit'], bindings['dividend_asset']), bindings['asset'], bindings['tx_hash'], bindings['status']))
 
         elif category == 'burns':
-            logging.info('Burn: {} burned {} for {} ({}) [{}]'.format(bindings['source'], output(bindings['burned'], config.WDC), output(bindings['earned'], config.XBJ), bindings['tx_hash'], bindings['status']))
+            logging.info('Burn: {} burned {} for {} ({}) [{}]'.format(bindings['source'], output(bindings['burned'], config.LTC), output(bindings['earned'], config.DLA), bindings['tx_hash'], bindings['status']))
 
         elif category == 'cancels':
             logging.info('Cancel: {} ({}) [{}]'.format(bindings['offer_hash'], bindings['tx_hash'], bindings['status']))
@@ -179,11 +179,11 @@ def log (db, command, category, bindings):
             logging.info('Callback: {} called back {}% of {} ({}) [{}]'.format(bindings['source'], float(D(bindings['fraction']) * D(100)), bindings['asset'], bindings['tx_hash'], bindings['status']))
 
         elif category == 'rps':
-            log_message = 'RPS: {} opens game with {} possible moves and a wager of {}'.format(bindings['source'], bindings['possible_moves'], output(bindings['wager'], 'XBJ'))
+            log_message = 'RPS: {} opens game with {} possible moves and a wager of {}'.format(bindings['source'], bindings['possible_moves'], output(bindings['wager'], 'DLA'))
             logging.info(log_message)
 
         elif category == 'rps_matches':
-            log_message = 'RPS Match: {} is playing a {}-moves game with {} with a wager of {} ({}) [{}]'.format(bindings['tx0_address'], bindings['possible_moves'], bindings['tx1_address'], output(bindings['wager'], 'XBJ'), bindings['id'], bindings['status'])
+            log_message = 'RPS Match: {} is playing a {}-moves game with {} with a wager of {} ({}) [{}]'.format(bindings['tx0_address'], bindings['possible_moves'], bindings['tx1_address'], output(bindings['wager'], 'DLA'), bindings['id'], bindings['status'])
             logging.info(log_message)
 
         elif category == 'rpsresolves':
@@ -192,7 +192,7 @@ def log (db, command, category, bindings):
                 rps_matches = list(cursor.execute('''SELECT * FROM rps_matches WHERE id = ?''', (bindings['rps_match_id'],)))
                 assert len(rps_matches) == 1
                 rps_match = rps_matches[0]
-                log_message = 'RPS Resolved: {} is playing {} on a {}-moves game with {} with a wager of {} ({}) [{}]'.format(rps_match['tx0_address'], bindings['move'], rps_match['possible_moves'], rps_match['tx1_address'], output(rps_match['wager'], 'XBJ'), rps_match['id'], rps_match['status'])
+                log_message = 'RPS Resolved: {} is playing {} on a {}-moves game with {} with a wager of {} ({}) [{}]'.format(rps_match['tx0_address'], bindings['move'], rps_match['possible_moves'], rps_match['tx1_address'], output(rps_match['wager'], 'DLA'), rps_match['id'], rps_match['status'])
             else:
                 log_message = 'RPS Resolved: {} [{}]'.format(bindings['tx_hash'], bindings['status'])
             logging.info(log_message)
@@ -216,12 +216,12 @@ def log (db, command, category, bindings):
 
             if bindings['bet_match_type_id'] == cfd_type_id:
                 if bindings['settled']:
-                    logging.info('Bet Match Settled: {} credited to the bull, {} credited to the bear, and {} credited to the feed address ({})'.format(output(bindings['bull_credit'], config.XBJ), output(bindings['bear_credit'], config.XBJ), output(bindings['fee'], config.XBJ), bindings['bet_match_id']))
+                    logging.info('Bet Match Settled: {} credited to the bull, {} credited to the bear, and {} credited to the feed address ({})'.format(output(bindings['bull_credit'], config.DLA), output(bindings['bear_credit'], config.DLA), output(bindings['fee'], config.DLA), bindings['bet_match_id']))
                 else:
-                    logging.info('Bet Match Force‐Liquidated: {} credited to the bull, {} credited to the bear, and {} credited to the feed address ({})'.format(output(bindings['bull_credit'], config.XBJ), output(bindings['bear_credit'], config.XBJ), output(bindings['fee'], config.XBJ), bindings['bet_match_id']))
+                    logging.info('Bet Match Force‐Liquidated: {} credited to the bull, {} credited to the bear, and {} credited to the feed address ({})'.format(output(bindings['bull_credit'], config.DLA), output(bindings['bear_credit'], config.DLA), output(bindings['fee'], config.DLA), bindings['bet_match_id']))
 
             elif bindings['bet_match_type_id'] == equal_type_id:
-                logging.info('Bet Match Settled: {} won the pot of {}; {} credited to the feed address ({})'.format(bindings['winner'], output(bindings['escrow_less_fee'], config.XBJ), output(bindings['fee'], config.XBJ), bindings['bet_match_id']))
+                logging.info('Bet Match Settled: {} won the pot of {}; {} credited to the feed address ({})'.format(bindings['winner'], output(bindings['escrow_less_fee'], config.DLA), output(bindings['fee'], config.DLA), bindings['bet_match_id']))
 
         elif category == 'rps_expirations':
             logging.info('Expired RPS: {}'.format(bindings['rps_hash']))
@@ -354,7 +354,7 @@ def connect_to_db(flags=None):
 
 def version_check (db):
     try:
-        host = 'https://raw.githubusercontent.com/Bluejudy/bluejudyd/evolve/version.json'
+        host = 'https://raw.githubusercontent.com/Czarcraft/czarcraftd/evolve/version.json'
         response = requests.get(host, headers={'cache-control': 'no-cache'})
         versions = json.loads(response.text)
     except Exception as e:
@@ -372,7 +372,7 @@ def version_check (db):
                 passed = False
 
     if not passed:
-        explanation = 'Your version of bluejudyd is v{}, but, as of block {}, the minimum version is v{}.{}.{}. Reason: ‘{}’. Please upgrade to the latest version and restart the server.'.format(
+        explanation = 'Your version of czarcraftd is v{}, but, as of block {}, the minimum version is v{}.{}.{}. Reason: ‘{}’. Please upgrade to the latest version and restart the server.'.format(
             config.VERSION_STRING, versions['block_index'], versions['minimum_version_major'], versions['minimum_version_minor'],
             versions['minimum_version_revision'], versions['reason'])
         if last_block(db)['block_index'] >= versions['block_index']:
@@ -384,9 +384,9 @@ def version_check (db):
     return
 
 def database_check (db, blockcount):
-    """Checks {} database to see if the {} server has caught up with Worldcoind.""".format(config.XBJ_NAME, config.XBJ_CLIENT)
+    """Checks {} database to see if the {} server has caught up with Litecoind.""".format(config.DLA_NAME, config.DLA_CLIENT)
     if last_block(db)['block_index'] + 1 < blockcount:
-        raise exceptions.DatabaseError('{} database is behind Worldcoind. Is the {} server running?'.format(config.XBJ_NAME, config.XBJ_CLIENT))
+        raise exceptions.DatabaseError('{} database is behind Litecoind. Is the {} server running?'.format(config.DLA_NAME, config.DLA_CLIENT))
     return
 
 def isodt (epoch_time):
@@ -437,8 +437,8 @@ def last_message (db):
 
 def asset_id (asset):
     # Special cases.
-    if asset == config.WDC: return 0
-    elif asset == config.XBJ: return 1
+    if asset == config.LTC: return 0
+    elif asset == config.DLA: return 1
 
     if asset[0] == 'A': raise exceptions.AssetNameError('starts with ‘A’')
 
@@ -465,8 +465,8 @@ def asset_id (asset):
     return n
 
 def asset_name (asset_id):
-    if asset_id == 0: return config.WDC
-    elif asset_id == 1: return config.XBJ
+    if asset_id == 0: return config.LTC
+    elif asset_id == 1: return config.DLA
 
     if asset_id < 26**3:
         raise exceptions.AssetIDError('too low')
@@ -487,12 +487,12 @@ def asset_name (asset_id):
 
 def debit (db, block_index, address, asset, quantity, action=None, event=None):
     debit_cursor = db.cursor()
-    assert asset != config.WDC # Never WDC.
+    assert asset != config.LTC # Never LTC.
     assert type(quantity) == int
     assert quantity >= 0
 
-    if asset == config.WDC:
-        raise exceptions.BalanceError('Cannot debit worldcoins from a {} address!'.format(config.XBJ_NAME))
+    if asset == config.LTC:
+        raise exceptions.BalanceError('Cannot debit litecoins from a {} address!'.format(config.DLA_NAME))
 
     debit_cursor.execute('''SELECT * FROM balances \
                             WHERE (address = ? AND asset = ?)''', (address, asset))
@@ -532,7 +532,7 @@ def debit (db, block_index, address, asset, quantity, action=None, event=None):
 
 def credit (db, block_index, address, asset, quantity, action=None, event=None):
     credit_cursor = db.cursor()
-    assert asset != config.WDC # Never WDC.
+    assert asset != config.LTC # Never LTC.
     assert type(quantity) == int
     assert quantity >= 0
 
@@ -607,7 +607,7 @@ def devise (db, quantity, asset, dest, divisible=None):
         return norm(fraction(quantity, 1e8), 6)
 
     if divisible == None:
-        if asset in (config.WDC, config.XBJ):
+        if asset in (config.LTC, config.DLA):
             divisible = True
         else:
             cursor = db.cursor()
@@ -662,8 +662,8 @@ def holders(db, asset):
     for order_match in list(cursor):
         holders.append({'address': order_match['tx1_address'], 'address_quantity': order_match['backward_quantity'], 'escrow': order_match['id']})
 
-    # Bets and RPS (and bet/rps matches) only escrow XBJ.
-    if asset == config.XBJ:
+    # Bets and RPS (and bet/rps matches) only escrow DLA.
+    if asset == config.DLA:
         cursor.execute('''SELECT * FROM bets \
                           WHERE status = ?''', ('open',))
         for bet in list(cursor):
@@ -687,7 +687,7 @@ def holders(db, asset):
     cursor.close()
     return holders
 
-def xbj_supply (db):
+def dla_supply (db):
     cursor = db.cursor()
 
     # Add burns.
@@ -710,7 +710,7 @@ def xbj_supply (db):
 
 def supplies (db):
     cursor = db.cursor()
-    supplies = {config.XBJ: xbj_supply(db)}
+    supplies = {config.DLA: dla_supply(db)}
     cursor.execute('''SELECT * from issuances \
                       WHERE status = ?''', ('valid',))
     for issuance in list(cursor):

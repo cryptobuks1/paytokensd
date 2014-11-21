@@ -23,18 +23,18 @@ import jsonrpc
 from jsonrpc import dispatcher
 import inspect
 
-from . import (config, worldcoin, exceptions, util)
-from . import (send, order, wdcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve, publish)
+from . import (config, litecoin, exceptions, util)
+from . import (send, order, ltcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve, publish)
 
 API_TABLES = ['balances', 'credits', 'debits', 'bets', 'bet_matches',
-              'broadcasts', 'wdcpays', 'burns', 'callbacks', 'cancels',
+              'broadcasts', 'ltcpays', 'burns', 'callbacks', 'cancels',
               'dividends', 'issuances', 'orders', 'order_matches', 'sends',
               'bet_expirations', 'order_expirations', 'bet_match_expirations',
               'order_match_expirations', 'bet_match_resolutions', 'rps',
               'rpsresolves', 'rps_matches', 'rps_expirations', 'rps_match_expirations',
               'mempool']
 
-API_TRANSACTIONS = ['bet', 'broadcast', 'wdcpay', 'burn', 'cancel',
+API_TRANSACTIONS = ['bet', 'broadcast', 'ltcpay', 'burn', 'cancel',
                     'callback', 'dividend', 'issuance', 'order', 'send',
                     'rps', 'rpsresolve', 'publish']
 
@@ -168,10 +168,10 @@ def get_rows(db, table, filters=[], filterop='AND', order_by=None, order_dir=Non
 
     # legacy filters
     if not show_expired and table == 'orders':
-        #Ignore WDC orders one block early.
+        #Ignore LTC orders one block early.
         expire_index = util.last_block(db)['block_index'] + 1
         more_conditions.append('''((give_asset == ? AND expire_index > ?) OR give_asset != ?)''')
-        bindings += [config.WDC, expire_index, config.WDC]
+        bindings += [config.LTC, expire_index, config.LTC]
 
     if (len(conditions) + len(more_conditions)) > 0:
         statement += ''' WHERE'''
@@ -217,7 +217,7 @@ def compose_transaction(db, name, params,
 
     # try:  # NOTE: For debugging, e.g. with `Invalid Params` error.
     tx_info = compose_method(db, **params)
-    return worldcoin.transaction(db, tx_info, encoding=encoding,
+    return litecoin.transaction(db, tx_info, encoding=encoding,
                                         fee_per_kb=fee_per_kb,
                                         regular_dust_size=regular_dust_size,
                                         multisig_dust_size=multisig_dust_size,
@@ -231,7 +231,7 @@ def compose_transaction(db, name, params,
         # traceback.print_exc()
 
 def sign_transaction(unsigned_tx_hex, private_key_wif=None):
-    return worldcoin.sign_tx(unsigned_tx_hex,
+    return litecoin.sign_tx(unsigned_tx_hex,
         private_key_wif=private_key_wif)
 
 def broadcast_transaction(signed_tx_hex):
@@ -241,12 +241,12 @@ def broadcast_transaction(signed_tx_hex):
         response = requests.post(url, data=params)
         if response.text.lower() != 'transaction submitted' or response.status_code != 200:
             if config.BROADCAST_TX_MAINNET == 'bci-failover':
-                return worldcoin.broadcast_tx(signed_tx_hex)
+                return litecoin.broadcast_tx(signed_tx_hex)
             else:
                 raise Exception(response.text)
         return response.text
     else:
-        return worldcoin.broadcast_tx(signed_tx_hex)
+        return litecoin.broadcast_tx(signed_tx_hex)
 
 def do_transaction(db, name, params, private_key_wif=None, **kwargs):
     unsigned_tx = compose_transaction(db, name, params, **kwargs)
@@ -261,7 +261,7 @@ def init_api_access_log():
     api_logger.propagate = False
 
 class APIStatusPoller(threading.Thread):
-    """Poll every few seconds for the length of time since the last version check, as well as the worldcoin status"""
+    """Poll every few seconds for the length of time since the last version check, as well as the litecoin status"""
     def __init__(self):
         self.last_version_check = 0
         self.last_database_check = 0
@@ -278,13 +278,13 @@ class APIStatusPoller(threading.Thread):
                     code = 10
                     util.version_check(db)
                     self.last_version_check = time.time()
-                # Check that worldcoind is running, communicable, and caught up with the blockchain.
-                # Check that the database has caught up with worldcoind.                    
+                # Check that litecoind is running, communicable, and caught up with the blockchain.
+                # Check that the database has caught up with litecoind.                    
                 if time.time() - self.last_database_check > 10 * 60: # Ten minutes since last check.
                     code = 11
-                    worldcoin.backend_check(db)
+                    litecoin.backend_check(db)
                     code = 12
-                    util.database_check(db, worldcoin.get_block_count())  # TODO: If not reparse or rollback, once those use API.
+                    util.database_check(db, litecoin.get_block_count())  # TODO: If not reparse or rollback, once those use API.
                     self.last_database_check = time.time()
             except Exception as e:
                 exception_name = e.__class__.__name__
@@ -407,8 +407,8 @@ class APIServer(threading.Thread):
             return messages
 
         @dispatcher.add_method
-        def get_xbj_supply():
-            return util.xbj_supply(db)
+        def get_dla_supply():
+            return util.dla_supply(db)
 
         @dispatcher.add_method
         def get_asset_info(assets):
@@ -417,12 +417,12 @@ class APIServer(threading.Thread):
             assetsInfo = []
             for asset in assets:
 
-                # WDC and XBJ.
-                if asset in [config.WDC, config.XBJ]:
-                    if asset == config.WDC:
-                        supply = worldcoin.get_wdc_supply(normalize=False)
+                # LTC and DLA.
+                if asset in [config.LTC, config.DLA]:
+                    if asset == config.LTC:
+                        supply = litecoin.get_ltc_supply(normalize=False)
                     else:
-                        supply = util.xbj_supply(db)
+                        supply = util.dla_supply(db)
 
                     assetsInfo.append({
                         'asset': asset,
@@ -508,7 +508,7 @@ class APIServer(threading.Thread):
 
         @dispatcher.add_method
         def get_running_info():
-            latestBlockIndex = worldcoin.get_block_count()
+            latestBlockIndex = litecoin.get_block_count()
 
             try:
                 util.database_check(db, latestBlockIndex)
@@ -529,7 +529,7 @@ class APIServer(threading.Thread):
 
             return {
                 'db_caught_up': caught_up,
-                'worldcoin_block_count': latestBlockIndex,
+                'litecoin_block_count': latestBlockIndex,
                 'last_block': last_block,
                 'last_message_index': last_message['message_index'] if last_message else -1,
                 'running_testnet': config.TESTNET,
@@ -544,7 +544,7 @@ class APIServer(threading.Thread):
             counts = {}
             cursor = db.cursor()
             for element in ['transactions', 'blocks', 'debits', 'credits', 'balances', 'sends', 'orders',
-                'order_matches', 'wdcpays', 'issuances', 'broadcasts', 'bets', 'bet_matches', 'dividends',
+                'order_matches', 'ltcpays', 'issuances', 'broadcasts', 'bets', 'bet_matches', 'dividends',
                 'burns', 'cancels', 'callbacks', 'order_expirations', 'bet_expirations', 'order_match_expirations',
                 'bet_match_expirations', 'messages']:
                 cursor.execute("SELECT COUNT(*) AS count FROM %s" % element)
@@ -618,6 +618,6 @@ class APIServer(threading.Thread):
             self.is_ready = True
             IOLoop.instance().start()        
         except OSError:
-            raise Exception("Cannot start the API subsystem. Is {} already running, or is something else listening on port {}?".format(config.XBJ_CLIENT, config.RPC_PORT))
+            raise Exception("Cannot start the API subsystem. Is {} already running, or is something else listening on port {}?".format(config.DLA_CLIENT, config.RPC_PORT))
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

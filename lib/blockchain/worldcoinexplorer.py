@@ -1,5 +1,5 @@
 '''
-worldcoinexplorer.com
+litecoinexplorer.com
 '''
 import logging
 
@@ -9,7 +9,7 @@ def get_host():
     if config.BLOCKCHAIN_SERVICE_CONNECT:
         return config.BLOCKCHAIN_SERVICE_CONNECT
     else:
-        return 'http://www.worldcoinexplorer.com' if config.TESTNET else 'http://www.worldcoinexplorer.com'
+        return 'http://www.litecoinexplorer.com' if config.TESTNET else 'http://www.litecoinexplorer.com'
 
 def check():
     pass

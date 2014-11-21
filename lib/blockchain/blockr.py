@@ -9,7 +9,7 @@ def get_host():
     if config.BLOCKCHAIN_SERVICE_CONNECT:
         return config.BLOCKCHAIN_SERVICE_CONNECT
     else:
-        return 'http://twdc.blockr.io' if config.TESTNET else 'http://wdc.blockr.io'
+        return 'http://tltc.blockr.io' if config.TESTNET else 'http://ltc.blockr.io'
 
 def check():
     pass

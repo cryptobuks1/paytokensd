@@ -5,9 +5,9 @@ import decimal
 D = decimal.Decimal
 from fractions import Fraction
 
-from . import (util, config, exceptions, worldcoin, util)
+from . import (util, config, exceptions, litecoin, util)
 
-"""Burn {} to earn {} during a special period of time.""".format(config.WDC, config.XBJ)
+"""Burn {} to earn {} during a special period of time.""".format(config.LTC, config.DLA)
 
 ID = 60
 
@@ -39,11 +39,11 @@ def compose (db, source, quantity, overburn=False):
     problems = validate(db, source, destination, quantity, util.last_block(db)['block_index'], overburn=overburn)
     if problems: raise exceptions.BurnError(problems)
 
-    # Check that a maximum of 1,000,000 WDC total is burned per address.
+    # Check that a maximum of 1,000,000 LTC total is burned per address.
     burns = list(cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', source)))
     already_burned = sum([burn['burned'] for burn in burns])
     if quantity > (config.MAX_BURN_BY_ADDRESS * config.UNIT - already_burned) and not overburn:
-        raise exceptions.BurnError('1,000,000 {} may be burned per address'.format(config.WDC))
+        raise exceptions.BurnError('1,000,000 {} may be burned per address'.format(config.LTC))
 
     cursor.close()
     return (source, [(destination, quantity)], None)
@@ -53,16 +53,16 @@ def parse (db, tx, message=None):
     status = 'valid'
 
     if status == 'valid':
-        problems = validate(db, tx['source'], tx['destination'], tx['wdc_amount'], tx['block_index'], overburn=False)
+        problems = validate(db, tx['source'], tx['destination'], tx['ltc_amount'], tx['block_index'], overburn=False)
         if problems: status = 'invalid: ' + '; '.join(problems)
 
-        if tx['wdc_amount'] != None:
-            sent = tx['wdc_amount']
+        if tx['ltc_amount'] != None:
+            sent = tx['ltc_amount']
         else:
             sent = 0
 
     if status == 'valid':
-        # Calculate quantity of XBJ earned. (Maximum 1,000,000 WDC in total, ever.)
+        # Calculate quantity of DLA earned. (Maximum 1,000,000 LTC in total, ever.)
         cursor = db.cursor()
         cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', tx['source']))
         burns = cursor.fetchall()
@@ -77,8 +77,8 @@ def parse (db, tx, message=None):
         multiplier = config.BURN_MULTIPLIER * (1 + (.5 * Fraction(partial_time, total_time)))
         earned = round(burned * multiplier)
 
-        # Credit source address with earned XBJ.
-        util.credit(db, tx['block_index'], tx['source'], config.XBJ, earned, action='burn', event=tx['tx_hash'])
+        # Credit source address with earned DLA.
+        util.credit(db, tx['block_index'], tx['source'], config.DLA, earned, action='burn', event=tx['tx_hash'])
     else:
         burned = 0
         earned = 0

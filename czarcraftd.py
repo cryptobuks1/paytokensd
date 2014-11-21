@@ -21,7 +21,7 @@ import appdirs
 from prettytable import PrettyTable
 from lockfile import LockFile
 
-from lib import config, api, util, exceptions, worldcoin, blocks, blockchain
+from lib import config, api, util, exceptions, litecoin, blocks, blockchain
 if os.name == 'nt':
     from lib import util_windows
 
@@ -37,7 +37,7 @@ def get_address (db, address):
     address_dict['sends'] = util.api('get_sends', {'filters': [('source', '==', address), ('destination', '==', address)], 'filterop': 'or'})
     address_dict['orders'] = util.api('get_orders', {'filters': [('source', '==', address),]})
     address_dict['order_matches'] = util.api('get_order_matches', {'filters': [('tx0_address', '==', address), ('tx1_address', '==', address)], 'filterop': 'or'})
-    address_dict['wdcpays'] = util.api('get_wdcpays', {'filters': [('source', '==', address), ('destination', '==', address)], 'filterop': 'or'})
+    address_dict['ltcpays'] = util.api('get_ltcpays', {'filters': [('source', '==', address), ('destination', '==', address)], 'filterop': 'or'})
     address_dict['issuances'] = util.api('get_issuances', {'filters': [('source', '==', address),]})
     address_dict['broadcasts'] = util.api('get_broadcasts', {'filters': [('source', '==', address),]})
     address_dict['bets'] = util.api('get_bets', {'filters': [('source', '==', address),]})
@@ -80,7 +80,7 @@ def format_bet (bet):
     if not bet['leverage']: leverage = None
     else: leverage = util.devise(db, D(bet['leverage']) / 5040, 'leverage', 'output')
 
-    return [util.BET_TYPE_NAME[bet['bet_type']], bet['feed_address'], util.isodt(bet['deadline']), target_value, leverage, str(bet['wager_remaining'] / config.UNIT) + ' XBJ', util.devise(db, odds, 'odds', 'output'), bet['expire_index'] - util.last_block(db)['block_index'], bet['tx_hash']]
+    return [util.BET_TYPE_NAME[bet['bet_type']], bet['feed_address'], util.isodt(bet['deadline']), target_value, leverage, str(bet['wager_remaining'] / config.UNIT) + ' DLA', util.devise(db, odds, 'odds', 'output'), bet['expire_index'] - util.last_block(db)['block_index'], bet['tx_hash']]
 
 def format_order_match (db, order_match):
     order_match_id = order_match['tx0_hash'] + order_match['tx1_hash']
@@ -99,15 +99,15 @@ def market (give_asset, get_asset):
 
     # Your Pending Orders Matches.
     addresses = []
-    for bunch in worldcoin.get_wallet():
+    for bunch in litecoin.get_wallet():
         addresses.append(bunch[:2][0])
     filters = [
         ('tx0_address', 'IN', addresses),
         ('tx1_address', 'IN', addresses)
     ]
-    awaiting_wdcs = util.api('get_order_matches', {'filters': filters, 'filterop': 'OR', 'status': 'pending'})
+    awaiting_ltcs = util.api('get_order_matches', {'filters': filters, 'filterop': 'OR', 'status': 'pending'})
     table = PrettyTable(['Matched Order ID', 'Time Left'])
-    for order_match in awaiting_wdcs:
+    for order_match in awaiting_ltcs:
         order_match = format_order_match(db, order_match)
         table.add_row(order_match)
     print('Your Pending Order Matches')
@@ -116,7 +116,7 @@ def market (give_asset, get_asset):
 
     # Open orders.
     orders = util.api('get_orders', {'status': 'open'})
-    table = PrettyTable(['Give Quantity', 'Give Asset', 'Price', 'Price Assets', 'Required {} Fee'.format(config.WDC), 'Provided {} Fee'.format(config.WDC), 'Time Left', 'Tx Hash'])
+    table = PrettyTable(['Give Quantity', 'Give Asset', 'Price', 'Price Assets', 'Required {} Fee'.format(config.LTC), 'Provided {} Fee'.format(config.LTC), 'Time Left', 'Tx Hash'])
     for order in orders:
         if give_asset and order['give_asset'] != give_asset: continue
         if get_asset and order['get_asset'] != get_asset: continue
@@ -169,10 +169,10 @@ def cli(method, params, unsigned):
         # Get public key for source.
         source = array[0]
         pubkey = None
-        if not worldcoin.is_valid(source):
+        if not litecoin.is_valid(source):
             raise exceptions.AddressError('Invalid address.')
-        if worldcoin.is_mine(source):
-            worldcoin.wallet_unlock()
+        if litecoin.is_mine(source):
+            litecoin.wallet_unlock()
         else:
             # TODO: Do this only if the encoding method needs it.
             print('Source not in backend wallet.')
@@ -185,12 +185,12 @@ def cli(method, params, unsigned):
                 private_key_wif = None
             except binascii.Error:
                 private_key_wif = answer    # Else, assume private key.
-                pubkey = worldcoin.private_key_to_public_key(private_key_wif)
+                pubkey = litecoin.private_key_to_public_key(private_key_wif)
         params['pubkey'] = pubkey
 
     """  # NOTE: For debugging, e.g. with `Invalid Params` error.
     tx_info = sys.modules['lib.send'].compose(db, params['source'], params['destination'], params['asset'], params['quantity'])
-    print(worldcoin.transaction(db, tx_info, encoding=params['encoding'],
+    print(litecoin.transaction(db, tx_info, encoding=params['encoding'],
                                         fee_per_kb=params['fee_per_kb'],
                                         regular_dust_size=params['regular_dust_size'],
                                         multisig_dust_size=params['multisig_dust_size'],
@@ -208,15 +208,15 @@ def cli(method, params, unsigned):
     if len(array) > 1:
         print('Multi‐signature transactions are signed and broadcasted manually.')
     elif not unsigned and input('Sign and broadcast? (y/N) ') == 'y':
-        if worldcoin.is_mine(source):
+        if litecoin.is_mine(source):
             private_key_wif = None
         elif not private_key_wif:   # If private key was not given earlier.
             private_key_wif = input('Private key (Wallet Import Format): ')
 
         # Sign and broadcast.
-        signed_tx_hex = worldcoin.sign_tx(unsigned_tx_hex, private_key_wif=private_key_wif)
+        signed_tx_hex = litecoin.sign_tx(unsigned_tx_hex, private_key_wif=private_key_wif)
         print('Transaction (signed):', signed_tx_hex)
-        print('Hash of transaction (broadcasted):', worldcoin.broadcast_tx(signed_tx_hex))
+        print('Hash of transaction (broadcasted):', litecoin.broadcast_tx(signed_tx_hex))
 
 def set_options (data_dir=None, backend_rpc_connect=None,
                  backend_rpc_port=None, backend_rpc_user=None, backend_rpc_password=None,
@@ -235,7 +235,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
 
     # Data directory
     if not data_dir:
-        config.DATA_DIR = appdirs.user_data_dir(appauthor=config.XBJ_NAME, appname=config.XBJ_CLIENT, roaming=True)
+        config.DATA_DIR = appdirs.user_data_dir(appauthor=config.DLA_NAME, appname=config.DLA_CLIENT, roaming=True)
     else:
         config.DATA_DIR = os.path.expanduser(data_dir)
     if not os.path.isdir(config.DATA_DIR): os.mkdir(config.DATA_DIR)
@@ -245,7 +245,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     if config_file:
         config_path = config_file
     else:
-        config_path = os.path.join(config.DATA_DIR, '{}.conf'.format(config.XBJ_CLIENT))
+        config_path = os.path.join(config.DATA_DIR, '{}.conf'.format(config.DLA_CLIENT))
     configfile.read(config_path)
     has_config = 'Default' in configfile
     #logging.debug("Config file: %s; Exists: %s" % (config_path, "Yes" if has_config else "No"))
@@ -277,23 +277,23 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     ##############
     # THINGS WE CONNECT TO
 
-    # Backend RPC host (Worldcoin Core)
+    # Backend RPC host (Litecoin Core)
     if backend_rpc_connect:
         config.BACKEND_RPC_CONNECT = backend_rpc_connect
     elif has_config and 'backend-rpc-connect' in configfile['Default'] and configfile['Default']['backend-rpc-connect']:
         config.BACKEND_RPC_CONNECT = configfile['Default']['backend-rpc-connect']
-    elif has_config and 'worldcoind-rpc-connect' in configfile['Default'] and configfile['Default']['worldcoind-rpc-connect']:
-        config.BACKEND_RPC_CONNECT = configfile['Default']['worldcoind-rpc-connect']
+    elif has_config and 'litecoind-rpc-connect' in configfile['Default'] and configfile['Default']['litecoind-rpc-connect']:
+        config.BACKEND_RPC_CONNECT = configfile['Default']['litecoind-rpc-connect']
     else:
         config.BACKEND_RPC_CONNECT = 'localhost'
 
-    # Backend Core RPC port (Worldcoin Core)
+    # Backend Core RPC port (Litecoin Core)
     if backend_rpc_port:
         config.BACKEND_RPC_PORT = backend_rpc_port
     elif has_config and 'backend-rpc-port' in configfile['Default'] and configfile['Default']['backend-rpc-port']:
         config.BACKEND_RPC_PORT = configfile['Default']['backend-rpc-port']
-    elif has_config and 'worldcoind-rpc-port' in configfile['Default'] and configfile['Default']['worldcoind-rpc-port']:
-        config.BACKEND_RPC_PORT = configfile['Default']['worldcoind-rpc-port']
+    elif has_config and 'litecoind-rpc-port' in configfile['Default'] and configfile['Default']['litecoind-rpc-port']:
+        config.BACKEND_RPC_PORT = configfile['Default']['litecoind-rpc-port']
     else:
         if config.TESTNET:
             config.BACKEND_RPC_PORT = config.DEFAULT_BACKEND_RPC_PORT_TESTNET
@@ -306,23 +306,23 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     except:
         raise Exception("Please specific a valid port number backend-rpc-port configuration parameter")
 
-    # Backend Core RPC user (Worldcoin Core)
+    # Backend Core RPC user (Litecoin Core)
     if backend_rpc_user:
         config.BACKEND_RPC_USER = backend_rpc_user
     elif has_config and 'backend-rpc-user' in configfile['Default'] and configfile['Default']['backend-rpc-user']:
         config.BACKEND_RPC_USER = configfile['Default']['backend-rpc-user']
-    elif has_config and 'worldcoind-rpc-user' in configfile['Default'] and configfile['Default']['worldcoind-rpc-user']:
-        config.BACKEND_RPC_USER = configfile['Default']['worldcoind-rpc-user']
+    elif has_config and 'litecoind-rpc-user' in configfile['Default'] and configfile['Default']['litecoind-rpc-user']:
+        config.BACKEND_RPC_USER = configfile['Default']['litecoind-rpc-user']
     else:
-        config.BACKEND_RPC_USER = 'worldcoinrpc'
+        config.BACKEND_RPC_USER = 'litecoinrpc'
 
-    # Backend Core RPC password (Worldcoin Core)
+    # Backend Core RPC password (Litecoin Core)
     if backend_rpc_password:
         config.BACKEND_RPC_PASSWORD = backend_rpc_password
     elif has_config and 'backend-rpc-password' in configfile['Default'] and configfile['Default']['backend-rpc-password']:
         config.BACKEND_RPC_PASSWORD = configfile['Default']['backend-rpc-password']
-    elif has_config and 'worldcoind-rpc-password' in configfile['Default'] and configfile['Default']['worldcoind-rpc-password']:
-        config.BACKEND_RPC_PASSWORD = configfile['Default']['worldcoind-rpc-password']
+    elif has_config and 'litecoind-rpc-password' in configfile['Default'] and configfile['Default']['litecoind-rpc-password']:
+        config.BACKEND_RPC_PASSWORD = configfile['Default']['litecoind-rpc-password']
     else:
         raise exceptions.ConfigurationError('backend RPC password not set. (Use configuration file or --backend-rpc-password=PASSWORD)')
 
@@ -370,7 +370,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     ##############
     # THINGS WE SERVE
 
-    # bluejudyd API RPC host
+    # czarcraftd API RPC host
     if rpc_host:
         config.RPC_HOST = rpc_host
     elif has_config and 'rpc-host' in configfile['Default'] and configfile['Default']['rpc-host']:
@@ -378,7 +378,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     else:
         config.RPC_HOST = 'localhost'
 
-    # bluejudyd API RPC port
+    # czarcraftd API RPC port
     if rpc_port:
         config.RPC_PORT = rpc_port
     elif has_config and 'rpc-port' in configfile['Default'] and configfile['Default']['rpc-port']:
@@ -397,11 +397,11 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     try:
         config.RPC_PORT = int(config.RPC_PORT)
         if not (int(config.BACKEND_RPC_PORT) > 1 and int(config.BACKEND_RPC_PORT) < 65535):
-            raise exceptions.ConfigurationError('invalid bluejudyd API port number') 
+            raise exceptions.ConfigurationError('invalid czarcraftd API port number') 
     except:
         raise Exception("Please specific a valid port number rpc-port configuration parameter")
 
-    #  bluejudyd API RPC user
+    #  czarcraftd API RPC user
     if rpc_user:
         config.RPC_USER = rpc_user
     elif has_config and 'rpc-user' in configfile['Default'] and configfile['Default']['rpc-user']:
@@ -409,7 +409,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     else:
         config.RPC_USER = 'rpc'
 
-    #  bluejudyd API RPC password
+    #  czarcraftd API RPC password
     if rpc_password:
         config.RPC_PASSWORD = rpc_password
     elif has_config and 'rpc-password' in configfile['Default'] and configfile['Default']['rpc-password']:
@@ -436,7 +436,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     elif has_config and 'log-file' in configfile['Default'] and configfile['Default']['log-file']:
         config.LOG = configfile['Default']['log-file']
     else:
-        string = config.XBJ_CLIENT
+        string = config.DLA_CLIENT
         if config.TESTNET:
             string += '.testnet'
         if config.TESTCOIN:
@@ -447,7 +447,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     if config.TESTCOIN:
         config.PREFIX = b'XX'                   # 2 bytes (possibly accidentally created)
     else:
-        config.PREFIX = b'CNTRPRTY'             # 8 bytes
+        config.PREFIX = b'CZRCRAFT'             # 8 bytes
 
     # Database
     if database_file:
@@ -455,7 +455,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     elif has_config and 'database-file' in configfile['Default'] and configfile['Default']['database-file']:
         config.DATABASE = configfile['Default']['database-file']
     else:
-        string = '{}.'.format(config.XBJ_CLIENT) + str(config.VERSION_MAJOR)
+        string = '{}.'.format(config.DLA_CLIENT) + str(config.VERSION_MAJOR)
         if config.TESTNET:
             string += '.testnet'
         if config.TESTCOIN:
@@ -492,21 +492,21 @@ def set_options (data_dir=None, backend_rpc_connect=None,
             config.BURN_END = config.BURN_END_MAINNET
             config.UNSPENDABLE = config.UNSPENDABLE_MAINNET
 
-    # method used to broadcast signed transactions. worldcoind or bci (default: worldcoind)
+    # method used to broadcast signed transactions. litecoind or bci (default: litecoind)
     if broadcast_tx_mainnet:
         config.BROADCAST_TX_MAINNET = broadcast_tx_mainnet
     elif has_config and 'broadcast-tx-mainnet' in configfile['Default']:
         config.BROADCAST_TX_MAINNET = configfile['Default']['broadcast-tx-mainnet']
     else:
-        config.BROADCAST_TX_MAINNET = '{}'.format(config.WDC_CLIENT)
+        config.BROADCAST_TX_MAINNET = '{}'.format(config.LTC_CLIENT)
 
 def balances (address):
-    worldcoin.validate_address(address, util.last_block(db)['block_index'])
+    litecoin.validate_address(address, util.last_block(db)['block_index'])
 
     address_data = get_address(db, address=address)
     balances = address_data['balances']
     table = PrettyTable(['Asset', 'Amount'])
-    table.add_row([config.WDC, blockchain.getaddressinfo(address)['balance']])  # WDC
+    table.add_row([config.LTC, blockchain.getaddressinfo(address)['balance']])  # LTC
     for balance in balances:
         asset = balance['asset']
         quantity = util.devise(db, balance['quantity'], balance['asset'], 'output')
@@ -517,7 +517,7 @@ def balances (address):
 def generate_move_random_hash(move):
     move = int(move).to_bytes(2, byteorder='big')
     random = os.urandom(16)
-    move_random_hash = worldcoin.dhash(random+move)
+    move_random_hash = litecoin.dhash(random+move)
     return binascii.hexlify(random).decode('utf8'), binascii.hexlify(move_random_hash).decode('utf8')
 
 
@@ -527,19 +527,19 @@ if __name__ == '__main__':
         util_windows.fix_win32_unicode()
 
     # Parse command-line arguments.
-    parser = argparse.ArgumentParser(prog=config.XBJ_CLIENT, description='the reference implementation of the {} protocol'.format(config.XBJ_NAME))
-    parser.add_argument('-V', '--version', action='version', version="{} v{}".format(config.XBJ_CLIENT, config.VERSION_STRING))
+    parser = argparse.ArgumentParser(prog=config.DLA_CLIENT, description='the reference implementation of the {} protocol'.format(config.DLA_NAME))
+    parser.add_argument('-V', '--version', action='version', version="{} v{}".format(config.DLA_CLIENT, config.VERSION_STRING))
 
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='sets log level to DEBUG instead of WARNING')
-    parser.add_argument('--testnet', action='store_true', help='use {} testnet addresses and block numbers'.format(config.WDC_NAME))
-    parser.add_argument('--testcoin', action='store_true', help='use the test {} network on every blockchain'.format(config.XBJ_NAME))
+    parser.add_argument('--testnet', action='store_true', help='use {} testnet addresses and block numbers'.format(config.LTC_NAME))
+    parser.add_argument('--testcoin', action='store_true', help='use the test {} network on every blockchain'.format(config.DLA_NAME))
     parser.add_argument('--carefulness', type=int, default=0, help='check conservation of assets after every CAREFULNESS transactions (potentially slow)')
     parser.add_argument('--unconfirmed', action='store_true', help='allow the spending of unconfirmed transaction outputs')
     parser.add_argument('--encoding', default='auto', type=str, help='data encoding method')
-    parser.add_argument('--fee-per-kb', type=D, default=D(config.DEFAULT_FEE_PER_KB / config.UNIT), help='fee per kilobyte, in {}'.format(config.WDC))
-    parser.add_argument('--regular-dust-size', type=D, default=D(config.DEFAULT_REGULAR_DUST_SIZE / config.UNIT), help='value for dust Pay‐to‐Pubkey‐Hash outputs, in {}'.format(config.WDC))
-    parser.add_argument('--multisig-dust-size', type=D, default=D(config.DEFAULT_MULTISIG_DUST_SIZE / config.UNIT), help='for dust OP_CHECKMULTISIG outputs, in {}'.format(config.WDC))
-    parser.add_argument('--op-return-value', type=D, default=D(config.DEFAULT_OP_RETURN_VALUE / config.UNIT), help='value for OP_RETURN outputs, in {}'.format(config.WDC))
+    parser.add_argument('--fee-per-kb', type=D, default=D(config.DEFAULT_FEE_PER_KB / config.UNIT), help='fee per kilobyte, in {}'.format(config.LTC))
+    parser.add_argument('--regular-dust-size', type=D, default=D(config.DEFAULT_REGULAR_DUST_SIZE / config.UNIT), help='value for dust Pay‐to‐Pubkey‐Hash outputs, in {}'.format(config.LTC))
+    parser.add_argument('--multisig-dust-size', type=D, default=D(config.DEFAULT_MULTISIG_DUST_SIZE / config.UNIT), help='for dust OP_CHECKMULTISIG outputs, in {}'.format(config.LTC))
+    parser.add_argument('--op-return-value', type=D, default=D(config.DEFAULT_OP_RETURN_VALUE / config.UNIT), help='value for OP_RETURN outputs, in {}'.format(config.LTC))
     parser.add_argument('--unsigned', action='store_true', help='print out unsigned hex of transaction; do not sign or broadcast')
 
     parser.add_argument('--data-dir', help='the directory in which to keep the database, config file and log file, by default')
@@ -547,7 +547,7 @@ if __name__ == '__main__':
     parser.add_argument('--config-file', help='the location of the configuration file')
     parser.add_argument('--log-file', help='the location of the log file')
 
-    parser.add_argument('--backend-rpc-connect', help='the hostname or IP of the backend worldcoind JSON-RPC server')
+    parser.add_argument('--backend-rpc-connect', help='the hostname or IP of the backend litecoind JSON-RPC server')
     parser.add_argument('--backend-rpc-port', type=int, help='the backend JSON-RPC port to connect to')
     parser.add_argument('--backend-rpc-user', help='the username used to communicate with backend over JSON-RPC')
     parser.add_argument('--backend-rpc-password', help='the password used to communicate with backend over JSON-RPC')
@@ -558,9 +558,9 @@ if __name__ == '__main__':
     parser.add_argument('--blockchain-service-connect', help='the blockchain service server URL base to connect to, if not default')
 
     parser.add_argument('--rpc-host', help='the IP of the interface to bind to for providing JSON-RPC API access (0.0.0.0 for all interfaces)')
-    parser.add_argument('--rpc-port', type=int, help='port on which to provide the {} JSON-RPC API'.format(config.XBJ_CLIENT))
-    parser.add_argument('--rpc-user', help='required username to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.XBJ_CLIENT))
-    parser.add_argument('--rpc-password', help='required password (for rpc-user) to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.XBJ_CLIENT))
+    parser.add_argument('--rpc-port', type=int, help='port on which to provide the {} JSON-RPC API'.format(config.DLA_CLIENT))
+    parser.add_argument('--rpc-user', help='required username to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.DLA_CLIENT))
+    parser.add_argument('--rpc-password', help='required password (for rpc-user) to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.DLA_CLIENT))
     parser.add_argument('--rpc-allow-cors', action='store_true', default=True, help='Allow ajax cross domain request')
 
     subparsers = parser.add_subparsers(dest='action', help='the action to be taken')
@@ -573,7 +573,7 @@ if __name__ == '__main__':
     parser_send.add_argument('--destination', required=True, help='the destination address')
     parser_send.add_argument('--quantity', required=True, help='the quantity of ASSET to send')
     parser_send.add_argument('--asset', required=True, help='the ASSET of which you would like to send QUANTITY')
-    parser_send.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_send.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_order = subparsers.add_parser('order', help='create and broadcast an *order* message')
     parser_order.add_argument('--source', required=True, help='the source address')
@@ -582,15 +582,15 @@ if __name__ == '__main__':
     parser_order.add_argument('--give-quantity', required=True, help='the quantity of GIVE_ASSET that you are willing to give')
     parser_order.add_argument('--give-asset', required=True, help='the asset that you would like to sell')
     parser_order.add_argument('--expiration', type=int, required=True, help='the number of blocks for which the order should be valid')
-    parser_order.add_argument('--fee-fraction-required', default=config.DEFAULT_FEE_FRACTION_REQUIRED, help='the miners’ fee required for an order to match this one, as a fraction of the {} to be bought'.format(config.WDC))
+    parser_order.add_argument('--fee-fraction-required', default=config.DEFAULT_FEE_FRACTION_REQUIRED, help='the miners’ fee required for an order to match this one, as a fraction of the {} to be bought'.format(config.LTC))
     parser_order_fees = parser_order.add_mutually_exclusive_group()
-    parser_order_fees.add_argument('--fee-fraction-provided', default=config.DEFAULT_FEE_FRACTION_PROVIDED, help='the miners’ fee provided, as a fraction of the {} to be sold'.format(config.WDC))
-    parser_order_fees.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_order_fees.add_argument('--fee-fraction-provided', default=config.DEFAULT_FEE_FRACTION_PROVIDED, help='the miners’ fee provided, as a fraction of the {} to be sold'.format(config.LTC))
+    parser_order_fees.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
-    parser_wdcpay= subparsers.add_parser('{}pay'.format(config.WDC).lower(), help='create and broadcast a *{}pay* message, to settle an Order Match for which you owe {}'.format(config.WDC, config.WDC))
-    parser_wdcpay.add_argument('--source', required=True, help='the source address')
-    parser_wdcpay.add_argument('--order-match-id', required=True, help='the concatenation of the hashes of the two transactions which compose the order match')
-    parser_wdcpay.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_ltcpay= subparsers.add_parser('{}pay'.format(config.LTC).lower(), help='create and broadcast a *{}pay* message, to settle an Order Match for which you owe {}'.format(config.LTC, config.LTC))
+    parser_ltcpay.add_argument('--source', required=True, help='the source address')
+    parser_ltcpay.add_argument('--order-match-id', required=True, help='the concatenation of the hashes of the two transactions which compose the order match')
+    parser_ltcpay.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_issuance = subparsers.add_parser('issuance', help='issue a new asset, issue more of an existing asset or transfer the ownership of an asset')
     parser_issuance.add_argument('--source', required=True, help='the source address')
@@ -600,81 +600,81 @@ if __name__ == '__main__':
     parser_issuance.add_argument('--divisible', action='store_true', help='whether or not the asset is divisible (must agree with previous issuances)')
     parser_issuance.add_argument('--callable', dest='callable_', action='store_true', help='whether or not the asset is callable (must agree with previous issuances)')
     parser_issuance.add_argument('--call-date', help='the date from which a callable asset may be called back (must agree with previous issuances)')
-    parser_issuance.add_argument('--call-price', help='the price, in XBJ per whole unit, at which a callable asset may be called back (must agree with previous issuances)')
+    parser_issuance.add_argument('--call-price', help='the price, in DLA per whole unit, at which a callable asset may be called back (must agree with previous issuances)')
     parser_issuance.add_argument('--description', type=str, required=True, help='a description of the asset (set to ‘LOCK’ to lock against further issuances with non‐zero quantitys)')
-    parser_issuance.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_issuance.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_broadcast = subparsers.add_parser('broadcast', help='broadcast textual and numerical information to the network')
     parser_broadcast.add_argument('--source', required=True, help='the source address')
     parser_broadcast.add_argument('--text', type=str, required=True, help='the textual part of the broadcast (set to ‘LOCK’ to lock feed)')
     parser_broadcast.add_argument('--value', type=float, default=-1, help='numerical value of the broadcast')
     parser_broadcast.add_argument('--fee-fraction', default=0, help='the fraction of bets on this feed that go to its operator')
-    parser_broadcast.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_broadcast.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_bet = subparsers.add_parser('bet', help='offer to make a bet on the value of a feed')
     parser_bet.add_argument('--source', required=True, help='the source address')
     parser_bet.add_argument('--feed-address', required=True, help='the address which publishes the feed to bet on')
     parser_bet.add_argument('--bet-type', choices=list(util.BET_TYPE_NAME.values()), required=True, help='choices: {}'.format(list(util.BET_TYPE_NAME.values())))
     parser_bet.add_argument('--deadline', required=True, help='the date and time at which the bet should be decided/settled')
-    parser_bet.add_argument('--wager', required=True, help='the quantity of XBJ to wager')
-    parser_bet.add_argument('--counterwager', required=True, help='the minimum quantity of XBJ to be wagered by the user to bet against you, if he were to accept the whole thing')
+    parser_bet.add_argument('--wager', required=True, help='the quantity of DLA to wager')
+    parser_bet.add_argument('--counterwager', required=True, help='the minimum quantity of DLA to be wagered by the user to bet against you, if he were to accept the whole thing')
     parser_bet.add_argument('--target-value', default=0.0, help='target value for Equal/NotEqual bet')
     parser_bet.add_argument('--leverage', type=int, default=5040, help='leverage, as a fraction of 5040')
     parser_bet.add_argument('--expiration', type=int, required=True, help='the number of blocks for which the bet should be valid')
-    parser_bet.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_bet.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_dividend = subparsers.add_parser('dividend', help='pay dividends to the holders of an asset (in proportion to their stake in it)')
     parser_dividend.add_argument('--source', required=True, help='the source address')
-    parser_dividend.add_argument('--quantity-per-unit', required=True, help='the quantity of XBJ to be paid per whole unit held of ASSET')
+    parser_dividend.add_argument('--quantity-per-unit', required=True, help='the quantity of DLA to be paid per whole unit held of ASSET')
     parser_dividend.add_argument('--asset', required=True, help='the asset to which pay dividends')
     parser_dividend.add_argument('--dividend-asset', required=True, help='asset in which to pay the dividends')
-    parser_dividend.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_dividend.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
-    parser_burn = subparsers.add_parser('burn', help='destroy {} to earn XBJ, during an initial period of time')
+    parser_burn = subparsers.add_parser('burn', help='destroy {} to earn DLA, during an initial period of time')
     parser_burn.add_argument('--source', required=True, help='the source address')
-    parser_burn.add_argument('--quantity', required=True, help='quantity of {} to be destroyed'.format(config.WDC))
-    parser_burn.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_burn.add_argument('--quantity', required=True, help='quantity of {} to be destroyed'.format(config.LTC))
+    parser_burn.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_cancel= subparsers.add_parser('cancel', help='cancel an open order or bet you created')
     parser_cancel.add_argument('--source', required=True, help='the source address')
     parser_cancel.add_argument('--offer-hash', required=True, help='the transaction hash of the order or bet')
-    parser_cancel.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_cancel.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_callback = subparsers.add_parser('callback', help='callback a fraction of an asset')
     parser_callback.add_argument('--source', required=True, help='the source address')
     parser_callback.add_argument('--fraction', required=True, help='the fraction of ASSET to call back')
     parser_callback.add_argument('--asset', required=True, help='the asset to callback')
-    parser_callback.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_callback.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
     parser_rps = subparsers.add_parser('rps', help='open a rock-paper-scissors like game')
     parser_rps.add_argument('--source', required=True, help='the source address')
-    parser_rps.add_argument('--wager', required=True, help='the quantity of XBJ to wager')
+    parser_rps.add_argument('--wager', required=True, help='the quantity of DLA to wager')
     parser_rps.add_argument('--move', type=int, required=True, help='the selected move')
     parser_rps.add_argument('--possible-moves', type=int, required=True, help='the number of possible moves (odd number greater or equal than 3)')
     parser_rps.add_argument('--expiration', type=int, required=True, help='the number of blocks for which the bet should be valid')
-    parser_rps.add_argument('--fee', help='the exact WDC fee to be paid to miners')
+    parser_rps.add_argument('--fee', help='the exact LTC fee to be paid to miners')
 
     parser_rpsresolve = subparsers.add_parser('rpsresolve', help='resolve a rock-paper-scissors like game')
     parser_rpsresolve.add_argument('--source', required=True, help='the source address')
     parser_rpsresolve.add_argument('--random', type=str, required=True, help='the random number used in the corresponding rps transaction')
     parser_rpsresolve.add_argument('--move', type=int, required=True, help='the selected move in the corresponding rps transaction')
     parser_rpsresolve.add_argument('--rps-match-id', required=True, help='the concatenation of the hashes of the two transactions which compose the rps match')
-    parser_rpsresolve.add_argument('--fee', help='the exact WDC fee to be paid to miners')
+    parser_rpsresolve.add_argument('--fee', help='the exact LTC fee to be paid to miners')
 
     parser_publish = subparsers.add_parser('publish', help='publish arbitrary data in the blockchain')
     parser_publish.add_argument('--source', required=True, help='the source address')
     parser_publish.add_argument('--data-hex', required=True, help='the hex‐encoded data')
-    parser_publish.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.WDC))
+    parser_publish.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
-    parser_address = subparsers.add_parser('balances', help='display the balances of a {} address'.format(config.XBJ_NAME))
+    parser_address = subparsers.add_parser('balances', help='display the balances of a {} address'.format(config.DLA_NAME))
     parser_address.add_argument('address', help='the address you are interested in')
 
-    parser_asset = subparsers.add_parser('asset', help='display the basic properties of a {} asset'.format(config.XBJ_NAME))
+    parser_asset = subparsers.add_parser('asset', help='display the basic properties of a {} asset'.format(config.DLA_NAME))
     parser_asset.add_argument('asset', help='the asset you are interested in')
 
-    parser_wallet = subparsers.add_parser('wallet', help='list the addresses in your backend wallet along with their balances in all {} assets'.format(config.XBJ_NAME))
+    parser_wallet = subparsers.add_parser('wallet', help='list the addresses in your backend wallet along with their balances in all {} assets'.format(config.DLA_NAME))
 
-    parser_pending= subparsers.add_parser('pending', help='list pending order matches awaiting {}payment from you'.format(config.WDC))
+    parser_pending= subparsers.add_parser('pending', help='list pending order matches awaiting {}payment from you'.format(config.LTC))
 
     parser_reparse = subparsers.add_parser('reparse', help='reparse all transactions in the database')
     parser_reparse.add_argument('--force', action='store_true', help='skip backend check, version check, lockfile check')
@@ -683,7 +683,7 @@ if __name__ == '__main__':
     parser_rollback.add_argument('block_index', type=int, help='the index of the last known good block')
     parser_rollback.add_argument('--force', action='store_true', help='skip backend check, version check, lockfile check')
 
-    parser_market = subparsers.add_parser('market', help='fill the screen with an always up-to-date summary of the {} market'.format(config.XBJ_NAME) )
+    parser_market = subparsers.add_parser('market', help='fill the screen with an always up-to-date summary of the {} market'.format(config.DLA_NAME) )
     parser_market.add_argument('--give-asset', help='only show orders offering to sell GIVE_ASSET')
     parser_market.add_argument('--get-asset', help='only show orders offering to buy GET_ASSET')
 
@@ -755,7 +755,7 @@ if __name__ == '__main__':
     db = util.connect_to_db()
 
     # Version
-    logging.info('Status: Running v{} of bluejudyd.'.format(config.VERSION_STRING, config.XBJ_CLIENT))
+    logging.info('Status: Running v{} of czarcraftd.'.format(config.VERSION_STRING, config.DLA_CLIENT))
     if not config.FORCE and args.action in ('server', 'reparse', 'rollback'):
         logging.info('Status: Checking version.')
         try:
@@ -766,7 +766,7 @@ if __name__ == '__main__':
 
     # MESSAGE CREATION
     if args.action == 'send':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         quantity = util.devise(db, args.quantity, args.asset, 'input')
         cli('create_send', {'source': args.source,
                             'destination': args.destination, 'asset':
@@ -780,21 +780,21 @@ if __name__ == '__main__':
             args.unsigned)
 
     elif args.action == 'order':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         fee_required, fee_fraction_provided = D(args.fee_fraction_required), D(args.fee_fraction_provided)
         give_quantity, get_quantity = D(args.give_quantity), D(args.get_quantity)
 
         # Fee argument is either fee_required or fee_provided, as necessary.
-        if args.give_asset == config.WDC:
+        if args.give_asset == config.LTC:
             fee_required = 0
             fee_fraction_provided = util.devise(db, fee_fraction_provided, 'fraction', 'input')
             fee_provided = round(D(fee_fraction_provided) * D(give_quantity) * D(config.UNIT))
-            print('Fee provided: {} {}'.format(util.devise(db, fee_provided, config.WDC, 'output'), config.WDC))
-        elif args.get_asset == config.WDC:
+            print('Fee provided: {} {}'.format(util.devise(db, fee_provided, config.LTC, 'output'), config.LTC))
+        elif args.get_asset == config.LTC:
             fee_provided = 0
             fee_fraction_required = util.devise(db, args.fee_fraction_required, 'fraction', 'input')
             fee_required = round(D(fee_fraction_required) * D(get_quantity) * D(config.UNIT))
-            print('Fee required: {} {}'.format(util.devise(db, fee_required, config.WDC, 'output'), config.WDC))
+            print('Fee required: {} {}'.format(util.devise(db, fee_required, config.LTC, 'output'), config.LTC))
         else:
             fee_required = 0
             fee_provided = 0
@@ -816,9 +816,9 @@ if __name__ == '__main__':
                              args.op_return_value},
            args.unsigned)
 
-    elif args.action == '{}pay'.format(config.WDC).lower():
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
-        cli('create_wdcpay', {'source': args.source,
+    elif args.action == '{}pay'.format(config.LTC).lower():
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
+        cli('create_ltcpay', {'source': args.source,
                               'order_match_id': args.order_match_id, 'fee':
                               args.fee, 'allow_unconfirmed_inputs':
                               args.unconfirmed, 'encoding': args.encoding,
@@ -829,7 +829,7 @@ if __name__ == '__main__':
             args.unsigned)
 
     elif args.action == 'issuance':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         quantity = util.devise(db, args.quantity, None, 'input',
                                divisible=args.divisible)
         if args.callable_:
@@ -858,7 +858,7 @@ if __name__ == '__main__':
            args.unsigned)
 
     elif args.action == 'broadcast':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         value = util.devise(db, args.value, 'value', 'input')
         fee_fraction = util.devise(db, args.fee_fraction, 'fraction', 'input')
 
@@ -875,10 +875,10 @@ if __name__ == '__main__':
            args.unsigned)
 
     elif args.action == 'bet':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         deadline = calendar.timegm(dateutil.parser.parse(args.deadline).utctimetuple())
-        wager = util.devise(db, args.wager, config.XBJ, 'input')
-        counterwager = util.devise(db, args.counterwager, config.XBJ, 'input')
+        wager = util.devise(db, args.wager, config.DLA, 'input')
+        counterwager = util.devise(db, args.counterwager, config.DLA, 'input')
         target_value = util.devise(db, args.target_value, 'value', 'input')
         leverage = util.devise(db, args.leverage, 'leverage', 'input')
 
@@ -897,8 +897,8 @@ if __name__ == '__main__':
             args.unsigned)
 
     elif args.action == 'dividend':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
-        quantity_per_unit = util.devise(db, args.quantity_per_unit, config.XBJ, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
+        quantity_per_unit = util.devise(db, args.quantity_per_unit, config.DLA, 'input')
         cli('create_dividend', {'source': args.source,
                                 'quantity_per_unit': quantity_per_unit,
                                 'asset': args.asset, 'dividend_asset':
@@ -912,8 +912,8 @@ if __name__ == '__main__':
            args.unsigned)
 
     elif args.action == 'burn':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
-        quantity = util.devise(db, args.quantity, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
+        quantity = util.devise(db, args.quantity, config.LTC, 'input')
         cli('create_burn', {'source': args.source, 'quantity': quantity,
                             'fee': args.fee, 'allow_unconfirmed_inputs':
                             args.unconfirmed, 'encoding': args.encoding,
@@ -924,7 +924,7 @@ if __name__ == '__main__':
         args.unsigned)
 
     elif args.action == 'cancel':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         cli('create_cancel', {'source': args.source,
                               'offer_hash': args.offer_hash, 'fee': args.fee,
                               'allow_unconfirmed_inputs': args.unconfirmed,
@@ -936,7 +936,7 @@ if __name__ == '__main__':
         args.unsigned)
 
     elif args.action == 'callback':
-        if args.fee: args.fee = util.devise(db, args.fee, config.WDC, 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         cli('create_callback', {'source': args.source,
                                 'fraction': util.devise(db, args.fraction, 'fraction', 'input'),
                                 'asset': args.asset, 'fee': args.fee,
@@ -949,8 +949,8 @@ if __name__ == '__main__':
            args.unsigned)
 
     elif args.action == 'rps':
-        if args.fee: args.fee = util.devise(db, args.fee, 'WDC', 'input')
-        wager = util.devise(db, args.wager, 'XBJ', 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, 'LTC', 'input')
+        wager = util.devise(db, args.wager, 'DLA', 'input')
         random, move_random_hash = generate_move_random_hash(args.move)
         print('random: {}'.format(random))
         print('move_random_hash: {}'.format(move_random_hash))
@@ -966,7 +966,7 @@ if __name__ == '__main__':
            args.unsigned)
 
     elif args.action == 'rpsresolve':
-        if args.fee: args.fee = util.devise(db, args.fee, 'WDC', 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, 'LTC', 'input')
         cli('create_rpsresolve', {'source': args.source,
                                 'random': args.random, 'move': args.move,
                                 'rps_match_id': args.rps_match_id, 'fee': args.fee,
@@ -979,7 +979,7 @@ if __name__ == '__main__':
            args.unsigned)
 
     elif args.action == 'publish':
-        if args.fee: args.fee = util.devise(db, args.fee, 'WDC', 'input')
+        if args.fee: args.fee = util.devise(db, args.fee, 'LTC', 'input')
         cli('create_publish', {'source': args.source,
                                'data_hex': args.data_hex, 'fee': args.fee,
                                'allow_unconfirmed_inputs': args.unconfirmed,
@@ -1008,7 +1008,7 @@ if __name__ == '__main__':
         locked = results['locked']
         supply = util.devise(db, results['supply'], args.asset, dest='output')
         call_date = util.isodt(results['call_date']) if results['call_date'] else results['call_date']
-        call_price = str(results['call_price']) + ' XBJ' if results['call_price'] else results['call_price']
+        call_price = str(results['call_price']) + ' DLA' if results['call_price'] else results['call_price']
 
         print('Asset Name:', args.asset)
         print('Asset ID:', asset_id)
@@ -1021,7 +1021,7 @@ if __name__ == '__main__':
         print('Call Price:', call_price)
         print('Description:', '‘' + results['description'] + '’')
 
-        if args.asset != config.WDC:
+        if args.asset != config.LTC:
             print('Shareholders:')
             balances = util.api('get_balances', {'filters': [('asset', '==', args.asset)]})
             print('\taddress, quantity, escrow')
@@ -1039,16 +1039,16 @@ if __name__ == '__main__':
         totals = {}
 
         print()
-        for bunch in worldcoin.get_wallet():
-            address, wdc_balance = bunch[:2]
+        for bunch in litecoin.get_wallet():
+            address, ltc_balance = bunch[:2]
             address_data = get_address(db, address=address)
             balances = address_data['balances']
             table = PrettyTable(['Asset', 'Balance'])
             empty = True
-            if wdc_balance:
-                table.add_row([config.WDC, wdc_balance])  # WDC
-                if config.WDC in totals.keys(): totals[config.WDC] += wdc_balance
-                else: totals[config.WDC] = wdc_balance
+            if ltc_balance:
+                table.add_row([config.LTC, ltc_balance])  # LTC
+                if config.LTC in totals.keys(): totals[config.LTC] += ltc_balance
+                else: totals[config.LTC] = ltc_balance
                 empty = False
             for balance in balances:
                 asset = balance['asset']
@@ -1074,15 +1074,15 @@ if __name__ == '__main__':
 
     elif args.action == 'pending':
         addresses = []
-        for bunch in worldcoin.get_wallet():
+        for bunch in litecoin.get_wallet():
             addresses.append(bunch[:2][0])
         filters = [
             ('tx0_address', 'IN', addresses),
             ('tx1_address', 'IN', addresses)
         ]
-        awaiting_wdcs = util.api('get_order_matches', {'filters': filters, 'filterop': 'OR', 'status': 'pending'})
+        awaiting_ltcs = util.api('get_order_matches', {'filters': filters, 'filterop': 'OR', 'status': 'pending'})
         table = PrettyTable(['Matched Order ID', 'Time Left'])
-        for order_match in awaiting_wdcs:
+        for order_match in awaiting_ltcs:
             order_match = format_order_match(db, order_match)
             table.add_row(order_match)
         print(table)
