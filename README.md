@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/CzarcraftDLA/czarcraftd.svg?branch=develop)](https://travis-ci.org/CzarcraftDLA/czarcraftd)
+[![Build Status](https://travis-ci.org/Czarcraft/czarcraftd.svg?branch=evolve)](https://travis-ci.org/Czarcraft/czarcraftd)
 
 # Description
 Czarcraft is a protocol for the creation and use of decentralised financial
@@ -8,7 +8,7 @@ repository, `czarcraftd`, constitute the reference implementation of the
 protocol.
 
 The Czarcraft protocol specification may be found at
-<https://github.com/CzarcraftDLA/Czarcraft>.
+<https://github.com/Czarcraft/Czarcraft>.
 
 # Dependencies
 * [Python 3](http://python.org)
