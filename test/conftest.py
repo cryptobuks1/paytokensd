@@ -11,7 +11,7 @@ from fixtures.scenarios import INTEGRATION_SCENARIOS
 
 from lib import config, litecoin
 
-import litecoin as litecoinlib
+import bitcoin as litecoinlib
 
 def pytest_generate_tests(metafunc):
     if metafunc.function.__name__ == 'test_vector':
