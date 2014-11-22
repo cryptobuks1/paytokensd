@@ -9,7 +9,7 @@ from fixtures.vectors import UNITTEST_VECTOR
 from fixtures.params import DEFAULT_PARAMS
 from fixtures.scenarios import INTEGRATION_SCENARIOS
 
-from lib import config, litecoin
+from lib import config, bitcoin
 
 import bitcoin as litecoinlib
 
@@ -87,7 +87,7 @@ def init_mock_functions(monkeypatch, rawtransactions_db):
 
     def decode_raw_transaction(raw_transaction):
         if pytest.config.option.initrawtransactions or pytest.config.option.saverawtransactions:
-            return litecoin.rpc('decoderawtransaction', [raw_transaction])
+            return bitcoin.rpc('decoderawtransaction', [raw_transaction])
         else:
             return util_test.decoderawtransaction(rawtransactions_db, raw_transaction)
 
@@ -100,15 +100,15 @@ def init_mock_functions(monkeypatch, rawtransactions_db):
             ctx = litecoinlib.core.CTransaction.deserialize(binascii.unhexlify(tx_hex))
             return ctx
 
-    monkeypatch.setattr('lib.litecoin.get_unspent_txouts', get_unspent_txouts)
-    monkeypatch.setattr('lib.litecoin.get_private_key', get_private_key)
-    monkeypatch.setattr('lib.litecoin.is_mine', is_mine)
+    monkeypatch.setattr('lib.bitcoin.get_unspent_txouts', get_unspent_txouts)
+    monkeypatch.setattr('lib.bitcoin.get_private_key', get_private_key)
+    monkeypatch.setattr('lib.bitcoin.is_mine', is_mine)
     monkeypatch.setattr('lib.util.isodt', isodt)
     monkeypatch.setattr('lib.util.curr_time', curr_time)
     monkeypatch.setattr('lib.util.date_passed', date_passed)
     monkeypatch.setattr('lib.api.init_api_access_log', init_api_access_log)
     if hasattr(config, 'PREFIX'):
         monkeypatch.setattr('lib.config.PREFIX', b'TESTXXXX')
-    monkeypatch.setattr('lib.litecoin.multisig_pubkeyhashes_to_pubkeys', multisig_pubkeyhashes_to_pubkeys)
-    monkeypatch.setattr('lib.litecoin.decode_raw_transaction', decode_raw_transaction)
-    monkeypatch.setattr('litecoin.rpc.Proxy', RpcProxy)
+    monkeypatch.setattr('lib.bitcoin.multisig_pubkeyhashes_to_pubkeys', multisig_pubkeyhashes_to_pubkeys)
+    monkeypatch.setattr('lib.bitcoin.decode_raw_transaction', decode_raw_transaction)
+    monkeypatch.setattr('bitcoin.rpc.Proxy', RpcProxy)
