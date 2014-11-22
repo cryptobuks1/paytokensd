@@ -6,10 +6,10 @@ from requests.auth import HTTPBasicAuth
 CURR_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(CURR_DIR, '..')))
 
-from lib import (config, api, util, exceptions, bitcoin, blocks)
-from lib import (send, order, btcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
+from lib import (config, api, util, exceptions, litecoin, blocks)
+from lib import (send, order, ltcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
 from lib.exceptions import ConsensusError
-import counterpartyd
+import czarcraftd
 
 from fixtures.params import DEFAULT_PARAMS as DP
 from fixtures.scenarios import UNITEST_FIXTURE, INTEGRATION_SCENARIOS, standard_scenarios_params
@@ -99,7 +99,7 @@ def insert_raw_transaction(raw_transaction, db, rawtransactions_db):
 
     cursor = db.cursor()
     tx_index = block_index - config.BURN_START + 1
-    tx = bitcoin.decode_raw_transaction(raw_transaction)
+    tx = litecoin.decode_raw_transaction(raw_transaction)
     
     tx_hash = hashlib.sha256('{}{}'.format(tx_index,raw_transaction).encode('utf-8')).hexdigest()
     #print(tx_hash)
@@ -136,7 +136,7 @@ def initialise_rawtransactions_db(db):
                 wallet_unspent = json.load(listunspent_test_file)
                 for output in wallet_unspent:
                     txid = binascii.hexlify(bitcoinlib.core.lx(output['txid'])).decode()
-                    tx = bitcoin.decode_raw_transaction(output['txhex'])
+                    tx = litecoin.decode_raw_transaction(output['txhex'])
                     cursor.execute('INSERT INTO raw_transactions VALUES (?, ?, ?)', (txid, output['txhex'], json.dumps(tx)))
         cursor.close()
 
@@ -192,7 +192,7 @@ def run_scenario(scenario, rawtransactions_db):
         if transaction[0] != 'create_next_block':
             module = sys.modules['lib.{}'.format(transaction[0])]
             compose = getattr(module, 'compose')
-            unsigned_tx_hex = bitcoin.transaction(db, compose(db, *transaction[1]), **transaction[2])
+            unsigned_tx_hex = litecoin.transaction(db, compose(db, *transaction[1]), **transaction[2])
             raw_transactions.append({transaction[0]: unsigned_tx_hex})
             insert_raw_transaction(unsigned_tx_hex, db, rawtransactions_db)
         else:
@@ -291,7 +291,7 @@ def check_ouputs(tx_name, method, inputs, outputs, error, records, counterpartyd
             if tx_name == 'order' and inputs[1]=='BTC':
                 print('give btc')
                 tx_params['fee_provided'] = DP['fee_provided']
-            unsigned_tx_hex = bitcoin.transaction(counterpartyd_db, test_outputs, **tx_params)
+            unsigned_tx_hex = litecoin.transaction(counterpartyd_db, test_outputs, **tx_params)
             print(tx_name)
             print(unsigned_tx_hex)
 
