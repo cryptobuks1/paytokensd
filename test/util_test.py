@@ -14,7 +14,7 @@ import czarcraftd
 from fixtures.params import DEFAULT_PARAMS as DP
 from fixtures.scenarios import UNITEST_FIXTURE, INTEGRATION_SCENARIOS, standard_scenarios_params
 
-import litecoin as litecoinlib
+import bitcoin as litecoinlib
 import binascii
 
 D = decimal.Decimal
