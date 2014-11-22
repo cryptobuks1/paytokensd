@@ -6,15 +6,15 @@ from requests.auth import HTTPBasicAuth
 CURR_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(CURR_DIR, '..')))
 
-from lib import (config, api, util, exceptions, litecoin, blocks)
-from lib import (send, order, ltcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
+from lib import (config, api, util, exceptions, bitcoin, blocks)
+from lib import (send, order, btcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
 from lib.exceptions import ConsensusError
-import czarcraftd
+import counterpartyd
 
 from fixtures.params import DEFAULT_PARAMS as DP
 from fixtures.scenarios import UNITEST_FIXTURE, INTEGRATION_SCENARIOS, standard_scenarios_params
 
-import bitcoin as litecoinlib
+import bitcoin as bitcoinlib
 import binascii
 
 D = decimal.Decimal
@@ -99,7 +99,7 @@ def insert_raw_transaction(raw_transaction, db, rawtransactions_db):
 
     cursor = db.cursor()
     tx_index = block_index - config.BURN_START + 1
-    tx = litecoin.decode_raw_transaction(raw_transaction)
+    tx = bitcoin.decode_raw_transaction(raw_transaction)
     
     tx_hash = hashlib.sha256('{}{}'.format(tx_index,raw_transaction).encode('utf-8')).hexdigest()
     #print(tx_hash)
@@ -107,8 +107,8 @@ def insert_raw_transaction(raw_transaction, db, rawtransactions_db):
     if pytest.config.option.saverawtransactions:
         save_rawtransaction(rawtransactions_db, tx_hash, raw_transaction, json.dumps(tx))
 
-    source, destination, ltc_amount, fee, data = blocks.get_tx_info2(tx, block_index)
-    transaction = (tx_index, tx_hash, block_index, block_hash, block_time, source, destination, ltc_amount, fee, data, True)
+    source, destination, btc_amount, fee, data = blocks.get_tx_info2(tx, block_index)
+    transaction = (tx_index, tx_hash, block_index, block_hash, block_time, source, destination, btc_amount, fee, data, True)
     cursor.execute('''INSERT INTO transactions VALUES (?,?,?,?,?,?,?,?,?,?,?)''', transaction)
     tx = list(cursor.execute('''SELECT * FROM transactions WHERE tx_index = ?''', (tx_index,)))[0]
     cursor.close()
@@ -128,22 +128,22 @@ def insert_transaction(transaction, db):
 # we use the same database (in memory) for speed
 def initialise_rawtransactions_db(db):
     if pytest.config.option.initrawtransactions:
-        czarcraftd.set_options(testnet=True, **COUNTERPARTYD_OPTIONS)
+        counterpartyd.set_options(testnet=True, **COUNTERPARTYD_OPTIONS)
         cursor = db.cursor()
         cursor.execute('DROP TABLE  IF EXISTS raw_transactions')
         cursor.execute('CREATE TABLE IF NOT EXISTS raw_transactions(tx_hash TEXT UNIQUE, tx_hex TEXT, tx_json TEXT)')
         with open(CURR_DIR + '/fixtures/unspent_outputs.json', 'r') as listunspent_test_file:
                 wallet_unspent = json.load(listunspent_test_file)
                 for output in wallet_unspent:
-                    txid = binascii.hexlify(litecoinlib.core.lx(output['txid'])).decode()
-                    tx = litecoin.decode_raw_transaction(output['txhex'])
+                    txid = binascii.hexlify(bitcoinlib.core.lx(output['txid'])).decode()
+                    tx = bitcoin.decode_raw_transaction(output['txhex'])
                     cursor.execute('INSERT INTO raw_transactions VALUES (?, ?, ?)', (txid, output['txhex'], json.dumps(tx)))
         cursor.close()
 
 def save_rawtransaction(db, tx_hash, tx_hex, tx_json):
     cursor = db.cursor()
     try:
-        txid = binascii.hexlify(litecoinlib.core.lx(tx_hash)).decode()
+        txid = binascii.hexlify(bitcoinlib.core.lx(tx_hash)).decode()
         cursor.execute('''INSERT INTO raw_transactions VALUES (?, ?, ?)''', (txid, tx_hex, tx_json))
     except Exception as e:
         pass
@@ -167,7 +167,7 @@ def initialise_db(db):
     insert_block(db, config.BURN_START - 1)
 
 def run_scenario(scenario, rawtransactions_db):
-    czarcraftd.set_options(database_file=':memory:', testnet=True, **COUNTERPARTYD_OPTIONS)
+    counterpartyd.set_options(database_file=':memory:', testnet=True, **COUNTERPARTYD_OPTIONS)
     config.PREFIX = b'TESTXXXX'
     config.FIRST_MULTISIG_BLOCK_TESTNET = 1
     config.CHECKPOINTS_TESTNET = {}
@@ -192,7 +192,7 @@ def run_scenario(scenario, rawtransactions_db):
         if transaction[0] != 'create_next_block':
             module = sys.modules['lib.{}'.format(transaction[0])]
             compose = getattr(module, 'compose')
-            unsigned_tx_hex = litecoin.transaction(db, compose(db, *transaction[1]), **transaction[2])
+            unsigned_tx_hex = bitcoin.transaction(db, compose(db, *transaction[1]), **transaction[2])
             raw_transactions.append({transaction[0]: unsigned_tx_hex})
             insert_raw_transaction(unsigned_tx_hex, db, rawtransactions_db)
         else:
@@ -229,8 +229,8 @@ def clean_scenario_dump(scenario_name, dump):
     dump = re.sub('X\'[A-F0-9]+\',1\);', '\'data\',1)', dump)
     return dump
 
-def check_record(record, czarcraftd_db):
-    cursor = czarcraftd_db.cursor()
+def check_record(record, counterpartyd_db):
+    cursor = counterpartyd_db.cursor()
 
     sql  = '''SELECT COUNT(*) AS c FROM {} '''.format(record['table'])
     sql += '''WHERE '''
@@ -263,35 +263,35 @@ def vector_to_args(vector, functions=[]):
                     args.append((tx_name, method, params['in'], outputs, error, records))
     return args
 
-def exec_tested_method(tx_name, method, tested_method, inputs, czarcraftd_db):
-    if tx_name == 'litecoin' and method == 'transaction':
-        return tested_method(czarcraftd_db, inputs[0], **inputs[1])
+def exec_tested_method(tx_name, method, tested_method, inputs, counterpartyd_db):
+    if tx_name == 'bitcoin' and method == 'transaction':
+        return tested_method(counterpartyd_db, inputs[0], **inputs[1])
     elif tx_name == 'util' and method == 'api':
         return tested_method(*inputs)
-    elif tx_name == 'litecoin' and method == 'base58_check_decode':
+    elif tx_name == 'bitcoin' and method == 'base58_check_decode':
         return binascii.hexlify(tested_method(*inputs)).decode('utf-8')
     else:
-        return tested_method(czarcraftd_db, *inputs)
+        return tested_method(counterpartyd_db, *inputs)
 
-def check_ouputs(tx_name, method, inputs, outputs, error, records, czarcraftd_db):
+def check_ouputs(tx_name, method, inputs, outputs, error, records, counterpartyd_db):
     tested_module = sys.modules['lib.{}'.format(tx_name)]
     tested_method = getattr(tested_module, method)
     
     test_outputs = None
     if error is not None:
         with pytest.raises(getattr(exceptions, error[0])) as exception:
-            test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, czarcraftd_db)
+            test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, counterpartyd_db)
     else:
-        test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, czarcraftd_db)
+        test_outputs = exec_tested_method(tx_name, method, tested_method, inputs, counterpartyd_db)
         if pytest.config.option.gentxhex and method == 'compose':
             print('')
             tx_params = {
                 'encoding': 'multisig'
             }
-            if tx_name == 'order' and inputs[1]=='LTC':
-                print('give ltc')
+            if tx_name == 'order' and inputs[1]=='BTC':
+                print('give btc')
                 tx_params['fee_provided'] = DP['fee_provided']
-            unsigned_tx_hex = litecoin.transaction(czarcraftd_db, test_outputs, **tx_params)
+            unsigned_tx_hex = bitcoin.transaction(counterpartyd_db, test_outputs, **tx_params)
             print(tx_name)
             print(unsigned_tx_hex)
 
@@ -301,7 +301,7 @@ def check_ouputs(tx_name, method, inputs, outputs, error, records, czarcraftd_db
         assert str(exception.value) == error[1]
     if records is not None:
         for record in records:
-            check_record(record, czarcraftd_db)
+            check_record(record, counterpartyd_db)
 
 def compare_strings(string1, string2):
     diff = list(difflib.unified_diff(string1.splitlines(1), string2.splitlines(1), n=0))
@@ -329,7 +329,7 @@ def get_block_txlist(db, block_index):
 def reparse(testnet=True):
     options = dict(COUNTERPARTYD_OPTIONS)
     options.pop('data_dir')
-    czarcraftd.set_options(database_file=':memory:', testnet=testnet, **options)
+    counterpartyd.set_options(database_file=':memory:', testnet=testnet, **options)
     
     if testnet:
         config.PREFIX = b'TESTXXXX'
@@ -344,7 +344,7 @@ def reparse(testnet=True):
     memory_db = util.connect_to_db()
     initialise_db(memory_db)
     
-    prod_db_path = os.path.join(config.DATA_DIR, '{}.{}{}.db'.format(config.DLA_CLIENT, str(config.VERSION_MAJOR), '.testnet' if testnet else ''))
+    prod_db_path = os.path.join(config.DATA_DIR, '{}.{}{}.db'.format(config.XCP_CLIENT, str(config.VERSION_MAJOR), '.testnet' if testnet else ''))
     prod_db = apsw.Connection(prod_db_path)
     prod_db.setrowtrace(util.rowtracer)
 
