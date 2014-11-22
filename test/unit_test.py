@@ -7,10 +7,10 @@ from fixtures.vectors import UNITTEST_VECTOR
 from fixtures.params import DEFAULT_PARAMS as DP
 
 from lib import (config, util, api)
-import counterpartyd
+import czarcraftd
 
 def setup_module():
-    counterpartyd.set_options(database_file=tempfile.gettempdir() + '/fixtures.unittest.db', testnet=True, **util_test.COUNTERPARTYD_OPTIONS)
+    czarcraftd.set_options(database_file=tempfile.gettempdir() + '/fixtures.unittest.db', testnet=True, **util_test.COUNTERPARTYD_OPTIONS)
     util_test.restore_database(config.DATABASE, CURR_DIR + '/fixtures/scenarios/unittest_fixture.sql')
     config.FIRST_MULTISIG_BLOCK_TESTNET = 1
     # start RPC server
