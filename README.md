@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/Czarcraft/czarcraftd.svg?branch=evolve)](https://travis-ci.org/Czarcraft/czarcraftd)
-
 # Description
 Czarcraft is a protocol for the creation and use of decentralised financial
 instruments such as asset exchanges, contracts for difference and dividend
