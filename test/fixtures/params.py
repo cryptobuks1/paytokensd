@@ -15,7 +15,7 @@ DEFAULT_PARAMS = {
     'fee_multiplier': .05,
     'move_random_hash': '6a886d74c2d4b1d7a35fd9159333ef64ba45a04d7aeeeb4538f958603c16fc5d',
     'rps_random': '7a4488d61ed8f2e9fa2874113fccb8b1',
-    'unspendable': 'mvWorldcoinAllianceXXXXXXXXXXW24Hef',
+    'unspendable': 'mvCounterpartyXXXXXXXXXXXXXXW24Hef',
     'burn_start': 154908,
     'burn_end': 4017708,
     'burn_quantity': int(.62 * UNIT)
