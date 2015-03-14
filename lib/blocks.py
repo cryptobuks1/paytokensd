@@ -108,6 +108,8 @@ def parse_tx (db, tx):
     return True
 
 def generate_consensus_hash(db, block_index, field, strings, check_hash_pos, previous_hash=None, current_hash=None):
+    # Treefunder : Genesis : Output Block Index
+    #print('Block Index: ' + str(block_index))
     cursor = db.cursor()
 
     get_hash = lambda i: list(cursor.execute('''SELECT {} FROM blocks WHERE block_index = ?'''.format(field), (i,)))[0][field]
@@ -124,6 +126,8 @@ def generate_consensus_hash(db, block_index, field, strings, check_hash_pos, pre
 
     # generate block hash
     block_hash = util.dhash_string(previous_hash + block_string)
+    # Treefunder : Genesis : Output Block Hash
+    #print (block_hash)
 
     if not current_hash:
       current_hash = get_hash(block_index)
@@ -143,10 +147,18 @@ def generate_consensus_hash(db, block_index, field, strings, check_hash_pos, pre
 
 def generate_ledger_hash(db, block_index, previous_hash=None, current_hash=None):
     ledger_hash = generate_consensus_hash(db, block_index, 'ledger_hash', util.BLOCK_LEDGER, 0, previous_hash, current_hash)
+    
+    # Treefunder : Genesis : Output Ledger Hash
+    #print('ledger_hash: ' + ledger_hash)
+    
     return ledger_hash
 
 def generate_txlist_hash(db, block_index, txlist, previous_hash=None, current_hash=None):
     txlist_hash = generate_consensus_hash(db, block_index, 'txlist_hash', txlist, 1, previous_hash, current_hash)
+    
+    # Treefunder: Genesis : Output Txlist Hash
+    #print('txlist_hash: ' + txlist_hash)
+    
     return txlist_hash
 
 def parse_block (db, block_index, block_time, 
