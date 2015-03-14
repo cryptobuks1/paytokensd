@@ -221,10 +221,10 @@ def validate (db, source, give_asset, give_quantity, get_asset, get_quantity, ex
     if not give_quantity or not get_quantity:
         problems.append('zero give or zero get')
     cursor.execute('select * from issuances where (status = ? and asset = ?)', ('valid', give_asset))
-    if give_asset not in (config.LTC, config.DLA) and not cursor.fetchall():
+    if give_asset not in (config.LTC, config.XPT) and not cursor.fetchall():
         problems.append('no such asset to give ({})'.format(give_asset))
     cursor.execute('select * from issuances where (status = ? and asset = ?)', ('valid', get_asset))
-    if get_asset not in (config.LTC, config.DLA) and not cursor.fetchall():
+    if get_asset not in (config.LTC, config.XPT) and not cursor.fetchall():
         problems.append('no such asset to get ({})'.format(get_asset))
     if expiration > config.MAX_EXPIRATION:
         problems.append('expiration overflow')

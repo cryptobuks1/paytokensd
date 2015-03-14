@@ -9,8 +9,8 @@ Interacting with the API
 Overview
 ----------
 
-``czarcraftd`` features a full-fledged JSON RPC 2.0-based API, which allows
-third-party applications to perform functions on the Czarcraft network
+``paytokensd`` features a full-fledged JSON RPC 2.0-based API, which allows
+third-party applications to perform functions on the Paytokens network
 without having to deal with the low‐level details of the protocol such as
 transaction encoding and state management.
 
@@ -18,7 +18,7 @@ transaction encoding and state management.
 Connecting and Making Requests
 ---------------------------------
 
-By default, ``czarcraftd`` will listen on port ``4000`` (if on mainnet) or port ``14000`` (on testnet) for API
+By default, ``paytokensd`` will listen on port ``4000`` (if on mainnet) or port ``14000`` (on testnet) for API
 requests. 
 
 Note that this API is built on JSON-RPC 2.0, not 1.1. JSON-RPC itself is pretty lightweight, and API requests
@@ -55,13 +55,13 @@ For more information on JSON RPC, please see the `JSON RPC 2.0 specification <ht
 
 Authentication
 ^^^^^^^^^^^^^^^
-Also note that the ``czarcraftd`` API interface requires HTTP basic authentication to use. The username and password required
-are stored in the ``czarcraftd.conf`` file, as ``rpc-user`` and ``rpc-password``, respectively. You can also modify
-``rpc-host`` and ``rpc-port`` to change what interface and port number ``czarcraftd`` binds to from the defaults.
+Also note that the ``paytokensd`` API interface requires HTTP basic authentication to use. The username and password required
+are stored in the ``paytokensd.conf`` file, as ``rpc-user`` and ``rpc-password``, respectively. You can also modify
+``rpc-host`` and ``rpc-port`` to change what interface and port number ``paytokensd`` binds to from the defaults.
 
 .. _examples:
 
-Below we provide a few examples of using the ``czarcraftd`` API. Examples in other languages are welcome,
+Below we provide a few examples of using the ``paytokensd`` API. Examples in other languages are welcome,
 if you'd like to submit them to us, structured in a way to be useful to other people and use standard libraries/methods. 
 
 Python Example
@@ -118,10 +118,10 @@ Python Example
       url, data=json.dumps(payload), headers=headers, auth=auth).json()
     print("GET_BURNS RESULT: ", response)
     
-    #Fetch all debits for > 2 DLA between blocks 280537 and 280539, sorting the results by quantity (descending order)
+    #Fetch all debits for > 2 XPT between blocks 280537 and 280539, sorting the results by quantity (descending order)
     payload = {
       "method": "get_debits",
-      "params": {"filters": [{'field': 'asset', 'op': '==', 'value': "DLA"},
+      "params": {"filters": [{'field': 'asset', 'op': '==', 'value': "XPT"},
                              {'field': 'quantity', 'op': '>', 'value': 200000000}],
                 "filterop": 'AND',
                 "order_by": 'quantity',
@@ -134,13 +134,13 @@ Python Example
     print("GET_DEBITS RESULT: ", response)
     
     
-    #Send 1 DLA (specified in satoshis) from one address to another (you must have the sending address in your litecoind wallet
+    #Send 1 XPT (specified in satoshis) from one address to another (you must have the sending address in your litecoind wallet
     # and it will be broadcast as a multisig transaction
     payload = {
       "method": "create_send",
       "params": {'source': "1CUdFmgK9trTNZHALfqGvd8d6nUZqH2AAf",
                  'destination': "17rRm52PYGkntcJxD2yQF9jQqRS4S2nZ7E",
-                 'asset': "DLA",
+                 'asset': "XPT",
                  'quantity': 100000000},
       "jsonrpc": "2.0",
       "id": 0,
@@ -172,7 +172,7 @@ Python Example
 PHP Example
 ^^^^^^^^^^^^
 
-With PHP, you can connect and query ``czarcraftd`` using the `JsonRPC <https://github.com/fguillot/JsonRPC>`__
+With PHP, you can connect and query ``paytokensd`` using the `JsonRPC <https://github.com/fguillot/JsonRPC>`__
 library. Here's a simple example that will get you the asset balances for a specific address:
 
 .. code-block:: php
@@ -214,10 +214,10 @@ assets
 ^^^^^^^^^
 
 Everywhere in the API an asset is referenced as an uppercase alphabetic (base
-26) string name of the asset, of at least 4 characters in length and not starting with 'A', or as 'LTC' or 'DLA' as appropriate. Examples are:
+26) string name of the asset, of at least 4 characters in length and not starting with 'A', or as 'LTC' or 'XPT' as appropriate. Examples are:
 
 - "LTC"
-- "DLA"
+- "XPT"
 - "FOOBAR"
 
 .. _quantitys:
@@ -233,7 +233,7 @@ Examples:
 - 4381030000 = 43.8103 (if divisible asset)
 - 4381030000 = 4381030000 (if indivisible asset) 
 
-**NOTE:** DLA and LTC themselves are divisible assets, and thus are listed in satoshis.
+**NOTE:** XPT and LTC themselves are divisible assets, and thus are listed in satoshis.
 
 .. _floats:
 
@@ -247,7 +247,7 @@ Floats are are ratios or floating point values with six decimal places of precis
 Filtering Read API results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Czarcraft API aims to be as simple and flexible as possible. To this end, it includes a straightforward
+The Paytokens API aims to be as simple and flexible as possible. To this end, it includes a straightforward
 way to filter the results of most :ref:`Read API functions <read_api>` to get the data you want, and only that.
 
 For each Read API function that supports it, a ``filters`` parameter exists. To apply a filter to a specific data field,
@@ -285,17 +285,17 @@ The exact form and format of this unsigned raw transaction string is specified v
 API call:
 
 - To return the transaction as an **OP_RETURN** transaction, specify ``opreturn`` for the ``encoding`` parameter.
-  Note that as of ``litecoind`` 0.9.0, not all Czarcraft transactions are possible with OP_RETURN, due to the 40
+  Note that as of ``litecoind`` 0.9.0, not all Paytokens transactions are possible with OP_RETURN, due to the 40
   byte limit imposed by the ``litecoind`` client in order for the transaction to be relayed on mainnet.
 - To return the transaction as a **multisig** transaction, specify ``multisig`` for the ``encoding`` parameter.
     
     - If the source address is in the local ``litecoind`` ``wallet.dat``. ``pubkey`` can be left as ``null``.
     - If the source address is *not* in the local ``litecoind`` ``wallet.dat``, ``pubkey`` should be set to the hex-encoded
       public key.
-- ``auto`` may also be specified to let ``czarcraftd`` choose here. Note that at this time, ``auto`` is effectively the same as
+- ``auto`` may also be specified to let ``paytokensd`` choose here. Note that at this time, ``auto`` is effectively the same as
   ``multisig``.
 
-- To return the Czarcraft transaction encoded into arbitrary address outputs (i.e. pubkeyhash encoding), specify
+- To return the Paytokens transaction encoded into arbitrary address outputs (i.e. pubkeyhash encoding), specify
   ``pubkeyhash`` for the ``encoding`` parameter. ``pubkey`` is also required to be set (as above, with ``multisig`` encoding)
   if the source address is not contained in the local ``litecoind`` ``wallet.dat``. Note that this method is **not** recommended
   as a first-resort, as it pollutes the UTXO set.
@@ -309,7 +309,7 @@ then have two approaches with respect to broadcasting the transaction on the net
   API method.
 - If the private key you need to sign the raw transaction is *not* in the local ``litecoind`` ``wallet.dat``, you must first sign
   the transaction yourself (or, alternatively, you can call the ``sign_tx`` API method and specify
-  the private key string to it, and ``czarcraftd`` will sign it for you). In either case, once you have the signed,
+  the private key string to it, and ``paytokensd`` will sign it for you). In either case, once you have the signed,
   hex-encoded transaction string, you can then call the ``broadcast_tx`` API method, which will then broadcast the transaction on the
   Litecoin network for you.
   
@@ -376,7 +376,7 @@ For example: ``get_balances``, ``get_credits``, ``get_debits``, etc are all vali
 **Notes:**
 
   * Please note that the ``get_balances`` API call will not return balances for LTC itself. It only returns balances
-    for DLA and other Czarcraft assets. To get LTC-based balances, use an existing system such as Insight, blockr.io,
+    for XPT and other Paytokens assets. To get LTC-based balances, use an existing system such as Insight, blockr.io,
     or blockchain.info.
 
 
@@ -413,13 +413,13 @@ get_asset_names
 ^^^^^^^^^^^^^^^^
 **get_asset_names()**
 
-Returns a list of all existing Czarcraft assets. 
+Returns a list of all existing Paytokens assets. 
 
 **Parameters:** None
 
 **Return:**
 
-  A list of existing Czarcraft asset names.
+  A list of existing Paytokens asset names.
 
 .. _get_messages:
 
@@ -427,7 +427,7 @@ get_messages
 ^^^^^^^^^^^^^^
 **get_messages(block_index)**
 
-Return message feed activity for the specified block index. The message feed essentially tracks all czarcraftd
+Return message feed activity for the specified block index. The message feed essentially tracks all paytokensd
 database actions and allows for lower-level state tracking for applications that hook into it.
    
 **Parameters:**
@@ -454,13 +454,13 @@ Return the message feed messages whose ``message_index`` values are contained in
 
   A list containing a `message <#message-object>`_ for each message found in the specified ``message_indexes`` list. If none were found, ``[]`` (empty list) is returned.
 
-.. _get_dla_supply:
+.. _get_xpt_supply:
 
-get_dla_supply
+get_xpt_supply
 ^^^^^^^^^^^^^^^
-**get_dla_supply()**
+**get_xpt_supply()**
 
-Gets the current total quantity of DLA in existance (i.e. quantity created via proof-of-burn, minus quantity
+Gets the current total quantity of XPT in existance (i.e. quantity created via proof-of-burn, minus quantity
 destroyed via asset issuances, etc).
 
 **Parameters:**
@@ -469,7 +469,7 @@ destroyed via asset issuances, etc).
 
 **Return:** 
 
-  The :ref:`quantity <quantitys>` of DLA currently in existance.
+  The :ref:`quantity <quantitys>` of XPT currently in existance.
 
 .. _get_block_info:
 
@@ -522,7 +522,7 @@ get_running_info
 ^^^^^^^^^^^^^^^^^
 **get_running_info()**
 
-Gets some operational parameters for czarcraftd.
+Gets some operational parameters for paytokensd.
 
 **Parameters:**
 
@@ -532,14 +532,14 @@ Gets some operational parameters for czarcraftd.
 
   An object with the following parameters:
 
-  - **db_caught_up** (*boolean*): ``true`` if czarcraftd block processing is caught up with the Litecoin blockchain, ``false`` otherwise.
-  - **litecoin_block_count** (**integer**): The block height on the Litecoin network (may not necessarily be the same as ``last_block``, if ``czarcraftd`` is catching up)
-  - **last_block** (*integer*): The index (height) of the last block processed by ``czarcraftd``
-  - **czarcraftd_version** (*float*): The czarcraftd program version, expressed as a float, such as 0.5
-  - **last_message_index** (*integer*): The index (ID) of the last message in the ``czarcraftd`` message feed
-  - **running_testnet** (*boolean*): ``true`` if czarcraftd is configured for testnet, ``false`` if configured on mainnet.
-  - **db_version_major** (*integer*): The major version of the current czarcraftd database
-  - **db_version_minor** (*integer*): The minor version of the current czarcraftd database
+  - **db_caught_up** (*boolean*): ``true`` if paytokensd block processing is caught up with the Litecoin blockchain, ``false`` otherwise.
+  - **litecoin_block_count** (**integer**): The block height on the Litecoin network (may not necessarily be the same as ``last_block``, if ``paytokensd`` is catching up)
+  - **last_block** (*integer*): The index (height) of the last block processed by ``paytokensd``
+  - **paytokensd_version** (*float*): The paytokensd program version, expressed as a float, such as 0.5
+  - **last_message_index** (*integer*): The index (ID) of the last message in the ``paytokensd`` message feed
+  - **running_testnet** (*boolean*): ``true`` if paytokensd is configured for testnet, ``false`` if configured on mainnet.
+  - **db_version_major** (*integer*): The major version of the current paytokensd database
+  - **db_version_minor** (*integer*): The minor version of the current paytokensd database
 
 
 Action/Write API Function Reference
@@ -596,16 +596,16 @@ Issue a bet against a feed.
   * **feed_address (string):** The address that host the feed to be bet on.
   * **bet_type (integer):** 0 for Bullish CFD, 1 for Bearish CFD, 2 for Equal, 3 for NotEqual.
   * **deadline (integer):** The time at which the bet should be decided/settled, in Unix time.
-  * **wager (integer):** The :ref:`quantity <quantitys>` of DLA to wager.
-  * **counterwager (integer):** The minimum :ref:`quantity <quantitys>` of DLA to be wagered against, for the bets to match.
+  * **wager (integer):** The :ref:`quantity <quantitys>` of XPT to wager.
+  * **counterwager (integer):** The minimum :ref:`quantity <quantitys>` of XPT to be wagered against, for the bets to match.
   * **expiration (integer):** The number of blocks after which the bet expires if it's still unmatched.
   * **target_value (float):** Target value for Equal/NotEqual bet
   * **leverage (integer):** Leverage, as a fraction of 5040
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -628,10 +628,10 @@ Broadcast textual and numerical information to the network.
   * **timestamp (integer):** The timestamp of the broadcast, in Unix time.
   * **value (float):** Numerical value of the broadcast.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -650,10 +650,10 @@ Create and (optionally) broadcast a LTCpay message, to settle an Order Match for
 
   * **order_match_id (string):** The concatenation of the hashes of the two transactions which compose the order match.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -665,17 +665,17 @@ create_burn
 ^^^^^^^^^^^^^^
 **create_burn(source, quantity, encoding='multisig', pubkey=null, allow_unconfirmed_inputs=false, fee=null, fee_per_kb=10000)**
 
-Burn a given quantity of LTC for DLA (**only possible between blocks 278310 and 283810**).
+Burn a given quantity of LTC for XPT (**only possible between blocks 278310 and 283810**).
 
 **Parameters:**
 
   * **source (string):** The address with the LTC to burn.
   * **quantity (integer):** The :ref:`quantity <quantitys>` of LTC to burn (1 LTC maximum burn per address).
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -694,10 +694,10 @@ Make a call on a callable asset (where some whole or part of the asset is return
   * **source (string):** The callback source address. Must be the same address as the specified asset's owner.
   * **fraction (float):** A floating point number greater than zero but less than or equal to 1, where 0% is for a callback of 0% of the balance of each of the asset's holders, and 1 would be for a callback of 100%). For example, ``0.56`` would be 56%. Each holder of the called asset will be paid the call price for the asset, times the number of units of that asset that were called back from them.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -715,10 +715,10 @@ Cancel an open order or bet you created.
 
   * **offer_hash (string):** The transaction hash of the order or bet.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -737,12 +737,12 @@ Issue a dividend on a specific user defined asset.
   * **source (string):** The address that will be issuing the dividend (must have the ownership of the asset which the dividend is being issued on).
   * **asset (string):** The :ref:`asset <assets>` that the dividends are being rewarded on.
   * **dividend_asset (string):** The :ref:`asset <assets>` that the dividends are paid in.
-  * **quantity_per_unit (integer):** The :ref:`quantity <quantitys>` of DLA rewarded per whole unit of the asset.
+  * **quantity_per_unit (integer):** The :ref:`quantity <quantitys>` of XPT rewarded per whole unit of the asset.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -765,14 +765,14 @@ Issue a new asset, issue more of an existing asset, lock an asset, or transfer t
   * **divisible (boolean):** Whether this asset is divisible or not (if a transfer, this value must match the value specified when the asset was originally issued).
   * **callable (boolean):** Whether the asset is callable or not.
   * **call_date (integer):** The timestamp at which the asset may be called back, in Unix time. Only valid for callable assets.
-  * **call_price (float):** The :ref:`price <floats>` per unit DLA at which the asset may be called back, on or after the specified call_date. Only valid for callable assets.
+  * **call_price (float):** The :ref:`price <floats>` per unit XPT at which the asset may be called back, on or after the specified call_date. Only valid for callable assets.
   * **description (string):** A textual description for the asset. 52 bytes max.
   * **transfer_destination (string):** The address to receive the asset (only used when *transferring* assets -- leave set to ``null`` if issuing an asset).
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -805,10 +805,10 @@ Issue an order request.
   * **fee_required (integer):** The miners' fee required to be paid by orders for them to match this one; in LTC; required only if buying LTC (may be zero, though). If not specified or set to ``null``, this defaults to 1% of the LTC desired for purchase.
   * **fee_provided (integer):** The miners' fee provided; in LTC; required only if selling LTC (should not be lower than is required for acceptance in a block).  If not specified or set to ``null``, this defaults to 1% of the LTC for sale. 
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -820,7 +820,7 @@ create_send
 ^^^^^^^^^^^^^^
 **create_send(source, destination, asset, quantity, encoding='multisig', pubkey=null, allow_unconfirmed_inputs=false, fee=null, fee_per_kb=10000)**
 
-Send DLA or a user defined asset.
+Send XPT or a user defined asset.
 
 **Parameters:**
 
@@ -829,10 +829,10 @@ Send DLA or a user defined asset.
   * **quantity (integer):** The :ref:`quantity <quantitys>` of the asset to send.
   * **asset (string):** The :ref:`asset <assets>` to send.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -851,14 +851,14 @@ Open a Rock-Paper-Scissors (RPS) like game.
 
   * **source (string):** The address that will be sending (must have the necessary quantity of the specified asset).
   * **possible_moves (integer):** The number of possible moves. Must be an odd number greater or equal than 3.
-  * **wager (integer):** The :ref:`quantity <quantitys>` of DLA to wager.
+  * **wager (integer):** The :ref:`quantity <quantitys>` of XPT to wager.
   * **move_random_hash (string):** A 32 bytes hex string (64 chars): sha256(sha256(random+move)). Where random is 16 bytes random number.
   * **expiration (integer):** The number of blocks for which the game should be valid.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -877,10 +877,10 @@ Resolve a Rock-Paper-Scissors game.
   * **random (string):** A 16 bytes hex string (32 chars) used to generate the move_random_hash value.
   * **rps_match_id (string):** The concatenation of the hashes of the two transactions which compose the rps match.
   * **encoding (string):** The encoding method to use, see :ref:`this section <encoding_param>` for more info.  
-  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``czarcraftd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
+  * **pubkey (string):** The pubkey hex string. Required if multisig transaction encoding is specified for a key external to ``paytokensd``'s local wallet. See :ref:`this section <encoding_param>` for more info.
   * **allow_unconfirmed_inputs (boolean):** Set to ``true`` to allow this transaction to utilize unconfirmed UTXOs as inputs.
-  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``czarcraftd`` to automatically choose. 
-  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``czarcraftd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
+  * **fee (integer):** If you'd like to specify a custom miners' fee, specify it here (in satoshi). Leave as default for ``paytokensd`` to automatically choose. 
+  * **fee_per_kb (integer):** The fee per kilobyte of transaction data constant that ``paytokensd`` uses when deciding on the dynamic fee to use (in satoshi). Leave as default unless you know what you're doing.
 
 **Return:** 
 
@@ -945,9 +945,9 @@ An object that describes a specific bet:
 * **feed_address** (*string*): The address with the feed that the bet is to be made on
 * **bet_type** (*integer*): 0 for Bullish CFD, 1 for Bearish CFD, 2 for Equal, 3 for Not Equal
 * **deadline** (*integer*): The timestamp at which the bet should be decided/settled, in Unix time.
-* **wager_quantity** (*integer*): The :ref:`quantity <quantitys>` of DLA to wager
-* **counterwager_quantity** (*integer*): The minimum :ref:`quantity <quantitys>` of DLA to be wagered by the user to bet against the bet issuer, if the other party were to accept the whole thing
-* **wager_remaining** (*integer*): The quantity of DLA wagered that is remaining to bet on
+* **wager_quantity** (*integer*): The :ref:`quantity <quantitys>` of XPT to wager
+* **counterwager_quantity** (*integer*): The minimum :ref:`quantity <quantitys>` of XPT to be wagered by the user to bet against the bet issuer, if the other party were to accept the whole thing
+* **wager_remaining** (*integer*): The quantity of XPT wagered that is remaining to bet on
 * **odds** (*float*): 
 * **target_value** (*float*): Target value for Equal/NotEqual bet
 * **leverage** (*integer*): Leverage, as a fraction of 5040
@@ -980,8 +980,8 @@ An object that describes a specific occurance of two bets being matched (either 
 * **deadline** (*integer*): The timestamp at which the bet match was made, in Unix time.
 * **target_value** (*float*): Target value for Equal/NotEqual bet  
 * **leverage** (*integer*): Leverage, as a fraction of 5040
-* **forward_quantity** (*integer*): The :ref:`quantity <quantitys>` of DLA bet in the initial bet
-* **backward_quantity** (*integer*): The :ref:`quantity <quantitys>` of DLA bet in the matching bet
+* **forward_quantity** (*integer*): The :ref:`quantity <quantitys>` of XPT bet in the initial bet
+* **backward_quantity** (*integer*): The :ref:`quantity <quantitys>` of XPT bet in the matching bet
 * **fee_multiplier** (*integer*): 
 * **validity** (*string*): Set to "valid" if a valid order match. Any other setting signifies an invalid/improper order match
 
@@ -1077,7 +1077,7 @@ An object that describes an issuance of dividends on a specific user defined ass
 * **block_index** (*integer*): The block index (block number in the block chain)
 * **source** (*string*): The address that issued the dividend
 * **asset** (*string*): The :ref:`asset <assets>` that the dividends are being rewarded on 
-* **quantity_per_unit** (*integer*): The :ref:`quantity <quantitys>` of DLA rewarded per whole unit of the asset
+* **quantity_per_unit** (*integer*): The :ref:`quantity <quantitys>` of XPT rewarded per whole unit of the asset
 * **validity** (*string*): Set to "valid" if a valid burn. Any other setting signifies an invalid/improper burn
 
 
@@ -1151,7 +1151,7 @@ An object that describes a specific occurance of two orders being matched (eithe
 Send Object
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-An object that describes a specific send (e.g. "simple send", of DLA, or a user defined asset):
+An object that describes a specific send (e.g. "simple send", of XPT, or a user defined asset):
 
 * **tx_index** (*integer*): The transaction index
 * **tx_hash** (*string*): The transaction hash
@@ -1168,13 +1168,13 @@ An object that describes a specific send (e.g. "simple send", of DLA, or a user 
 Message Object
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-An object that describes a specific event in the czarcraftd message feed (which can be used by 3rd party applications
-to track state changes to the czarcraftd database on a block-by-block basis).
+An object that describes a specific event in the paytokensd message feed (which can be used by 3rd party applications
+to track state changes to the paytokensd database on a block-by-block basis).
 
 * **message_index** (*integer*): The message index (i.e. transaction index)
 * **block_index** (*integer*): The block index (block number in the block chain) this event occurred on
 * **category** (*string*): A string denoting the entity that the message relates to, e.g. "credits", "burns", "debits".
-  The category matches the relevant table name in czarcraftd (see blocks.py for more info).
+  The category matches the relevant table name in paytokensd (see blocks.py for more info).
 * **command** (*string*): The operation done to the table noted in **category**. This is either "insert", or "update". 
 * **bindings** (*string*): A JSON-encoded object containing the message data. The properties in this object match the
   columns in the table referred to by **category**.
@@ -1280,7 +1280,7 @@ Here the list of all possible status for each table:
 API Changes
 -------------
 
-This section documents any changes to the ``czarcraftd`` API, for version numbers where there were API-level modifications.
+This section documents any changes to the ``paytokensd`` API, for version numbers where there were API-level modifications.
 
 
 .. _9_24_1:
@@ -1308,7 +1308,7 @@ This section documents any changes to the ``czarcraftd`` API, for version number
 * create_bet: ``wager`` and ``counterwager`` args are replaced by ``wager_quantity`` and ``counterwager_quantity``
 * create_issuance: parameter ``lock`` (boolean) removed (use LOCK in description)
 * create_issuance: parameter ``transfer_destination`` replaced by ``destination``
-* DatabaseError: now a DatabaseError is returned immediately if the czarcraftd database is behind the backend, instead of after fourteen seconds
+* DatabaseError: now a DatabaseError is returned immediately if the paytokensd database is behind the backend, instead of after fourteen seconds
 
 
 .. _9_32_0:

@@ -80,7 +80,7 @@ def format_bet (bet):
     if not bet['leverage']: leverage = None
     else: leverage = util.devise(db, D(bet['leverage']) / 5040, 'leverage', 'output')
 
-    return [util.BET_TYPE_NAME[bet['bet_type']], bet['feed_address'], util.isodt(bet['deadline']), target_value, leverage, str(bet['wager_remaining'] / config.UNIT) + ' DLA', util.devise(db, odds, 'odds', 'output'), bet['expire_index'] - util.last_block(db)['block_index'], bet['tx_hash']]
+    return [util.BET_TYPE_NAME[bet['bet_type']], bet['feed_address'], util.isodt(bet['deadline']), target_value, leverage, str(bet['wager_remaining'] / config.UNIT) + ' XPT', util.devise(db, odds, 'odds', 'output'), bet['expire_index'] - util.last_block(db)['block_index'], bet['tx_hash']]
 
 def format_order_match (db, order_match):
     order_match_id = order_match['tx0_hash'] + order_match['tx1_hash']
@@ -235,7 +235,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
 
     # Data directory
     if not data_dir:
-        config.DATA_DIR = appdirs.user_data_dir(appauthor=config.DLA_NAME, appname=config.DLA_CLIENT, roaming=True)
+        config.DATA_DIR = appdirs.user_data_dir(appauthor=config.XPT_NAME, appname=config.XPT_CLIENT, roaming=True)
     else:
         config.DATA_DIR = os.path.expanduser(data_dir)
     if not os.path.isdir(config.DATA_DIR): os.mkdir(config.DATA_DIR)
@@ -245,7 +245,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     if config_file:
         config_path = config_file
     else:
-        config_path = os.path.join(config.DATA_DIR, '{}.conf'.format(config.DLA_CLIENT))
+        config_path = os.path.join(config.DATA_DIR, '{}.conf'.format(config.XPT_CLIENT))
     configfile.read(config_path)
     has_config = 'Default' in configfile
     #logging.debug("Config file: %s; Exists: %s" % (config_path, "Yes" if has_config else "No"))
@@ -370,7 +370,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     ##############
     # THINGS WE SERVE
 
-    # czarcraftd API RPC host
+    # paytokensd API RPC host
     if rpc_host:
         config.RPC_HOST = rpc_host
     elif has_config and 'rpc-host' in configfile['Default'] and configfile['Default']['rpc-host']:
@@ -378,7 +378,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     else:
         config.RPC_HOST = 'localhost'
 
-    # czarcraftd API RPC port
+    # paytokensd API RPC port
     if rpc_port:
         config.RPC_PORT = rpc_port
     elif has_config and 'rpc-port' in configfile['Default'] and configfile['Default']['rpc-port']:
@@ -397,11 +397,11 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     try:
         config.RPC_PORT = int(config.RPC_PORT)
         if not (int(config.BACKEND_RPC_PORT) > 1 and int(config.BACKEND_RPC_PORT) < 65535):
-            raise exceptions.ConfigurationError('invalid czarcraftd API port number') 
+            raise exceptions.ConfigurationError('invalid paytokensd API port number') 
     except:
         raise Exception("Please specific a valid port number rpc-port configuration parameter")
 
-    #  czarcraftd API RPC user
+    #  paytokensd API RPC user
     if rpc_user:
         config.RPC_USER = rpc_user
     elif has_config and 'rpc-user' in configfile['Default'] and configfile['Default']['rpc-user']:
@@ -409,7 +409,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     else:
         config.RPC_USER = 'rpc'
 
-    #  czarcraftd API RPC password
+    #  paytokensd API RPC password
     if rpc_password:
         config.RPC_PASSWORD = rpc_password
     elif has_config and 'rpc-password' in configfile['Default'] and configfile['Default']['rpc-password']:
@@ -436,7 +436,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     elif has_config and 'log-file' in configfile['Default'] and configfile['Default']['log-file']:
         config.LOG = configfile['Default']['log-file']
     else:
-        string = config.DLA_CLIENT
+        string = config.XPT_CLIENT
         if config.TESTNET:
             string += '.testnet'
         if config.TESTCOIN:
@@ -447,7 +447,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     if config.TESTCOIN:
         config.PREFIX = b'XX'                   # 2 bytes (possibly accidentally created)
     else:
-        config.PREFIX = b'CZRCRAFT'             # 8 bytes
+        config.PREFIX = b'PAYTOKEN'             # 8 bytes
 
     # Database
     if database_file:
@@ -455,7 +455,7 @@ def set_options (data_dir=None, backend_rpc_connect=None,
     elif has_config and 'database-file' in configfile['Default'] and configfile['Default']['database-file']:
         config.DATABASE = configfile['Default']['database-file']
     else:
-        string = '{}.'.format(config.DLA_CLIENT) + str(config.VERSION_MAJOR)
+        string = '{}.'.format(config.XPT_CLIENT) + str(config.VERSION_MAJOR)
         if config.TESTNET:
             string += '.testnet'
         if config.TESTCOIN:
@@ -527,12 +527,12 @@ if __name__ == '__main__':
         util_windows.fix_win32_unicode()
 
     # Parse command-line arguments.
-    parser = argparse.ArgumentParser(prog=config.DLA_CLIENT, description='the reference implementation of the {} protocol'.format(config.DLA_NAME))
-    parser.add_argument('-V', '--version', action='version', version="{} v{}".format(config.DLA_CLIENT, config.VERSION_STRING))
+    parser = argparse.ArgumentParser(prog=config.XPT_CLIENT, description='the reference implementation of the {} protocol'.format(config.XPT_NAME))
+    parser.add_argument('-V', '--version', action='version', version="{} v{}".format(config.XPT_CLIENT, config.VERSION_STRING))
 
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='sets log level to DEBUG instead of WARNING')
     parser.add_argument('--testnet', action='store_true', help='use {} testnet addresses and block numbers'.format(config.LTC_NAME))
-    parser.add_argument('--testcoin', action='store_true', help='use the test {} network on every blockchain'.format(config.DLA_NAME))
+    parser.add_argument('--testcoin', action='store_true', help='use the test {} network on every blockchain'.format(config.XPT_NAME))
     parser.add_argument('--carefulness', type=int, default=0, help='check conservation of assets after every CAREFULNESS transactions (potentially slow)')
     parser.add_argument('--unconfirmed', action='store_true', help='allow the spending of unconfirmed transaction outputs')
     parser.add_argument('--encoding', default='auto', type=str, help='data encoding method')
@@ -558,9 +558,9 @@ if __name__ == '__main__':
     parser.add_argument('--blockchain-service-connect', help='the blockchain service server URL base to connect to, if not default')
 
     parser.add_argument('--rpc-host', help='the IP of the interface to bind to for providing JSON-RPC API access (0.0.0.0 for all interfaces)')
-    parser.add_argument('--rpc-port', type=int, help='port on which to provide the {} JSON-RPC API'.format(config.DLA_CLIENT))
-    parser.add_argument('--rpc-user', help='required username to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.DLA_CLIENT))
-    parser.add_argument('--rpc-password', help='required password (for rpc-user) to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.DLA_CLIENT))
+    parser.add_argument('--rpc-port', type=int, help='port on which to provide the {} JSON-RPC API'.format(config.XPT_CLIENT))
+    parser.add_argument('--rpc-user', help='required username to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.XPT_CLIENT))
+    parser.add_argument('--rpc-password', help='required password (for rpc-user) to use the {} JSON-RPC API (via HTTP basic auth)'.format(config.XPT_CLIENT))
     parser.add_argument('--rpc-allow-cors', action='store_true', default=True, help='Allow ajax cross domain request')
 
     subparsers = parser.add_subparsers(dest='action', help='the action to be taken')
@@ -600,7 +600,7 @@ if __name__ == '__main__':
     parser_issuance.add_argument('--divisible', action='store_true', help='whether or not the asset is divisible (must agree with previous issuances)')
     parser_issuance.add_argument('--callable', dest='callable_', action='store_true', help='whether or not the asset is callable (must agree with previous issuances)')
     parser_issuance.add_argument('--call-date', help='the date from which a callable asset may be called back (must agree with previous issuances)')
-    parser_issuance.add_argument('--call-price', help='the price, in DLA per whole unit, at which a callable asset may be called back (must agree with previous issuances)')
+    parser_issuance.add_argument('--call-price', help='the price, in XPT per whole unit, at which a callable asset may be called back (must agree with previous issuances)')
     parser_issuance.add_argument('--description', type=str, required=True, help='a description of the asset (set to ‘LOCK’ to lock against further issuances with non‐zero quantitys)')
     parser_issuance.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
@@ -616,8 +616,8 @@ if __name__ == '__main__':
     parser_bet.add_argument('--feed-address', required=True, help='the address which publishes the feed to bet on')
     parser_bet.add_argument('--bet-type', choices=list(util.BET_TYPE_NAME.values()), required=True, help='choices: {}'.format(list(util.BET_TYPE_NAME.values())))
     parser_bet.add_argument('--deadline', required=True, help='the date and time at which the bet should be decided/settled')
-    parser_bet.add_argument('--wager', required=True, help='the quantity of DLA to wager')
-    parser_bet.add_argument('--counterwager', required=True, help='the minimum quantity of DLA to be wagered by the user to bet against you, if he were to accept the whole thing')
+    parser_bet.add_argument('--wager', required=True, help='the quantity of XPT to wager')
+    parser_bet.add_argument('--counterwager', required=True, help='the minimum quantity of XPT to be wagered by the user to bet against you, if he were to accept the whole thing')
     parser_bet.add_argument('--target-value', default=0.0, help='target value for Equal/NotEqual bet')
     parser_bet.add_argument('--leverage', type=int, default=5040, help='leverage, as a fraction of 5040')
     parser_bet.add_argument('--expiration', type=int, required=True, help='the number of blocks for which the bet should be valid')
@@ -625,12 +625,12 @@ if __name__ == '__main__':
 
     parser_dividend = subparsers.add_parser('dividend', help='pay dividends to the holders of an asset (in proportion to their stake in it)')
     parser_dividend.add_argument('--source', required=True, help='the source address')
-    parser_dividend.add_argument('--quantity-per-unit', required=True, help='the quantity of DLA to be paid per whole unit held of ASSET')
+    parser_dividend.add_argument('--quantity-per-unit', required=True, help='the quantity of XPT to be paid per whole unit held of ASSET')
     parser_dividend.add_argument('--asset', required=True, help='the asset to which pay dividends')
     parser_dividend.add_argument('--dividend-asset', required=True, help='asset in which to pay the dividends')
     parser_dividend.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
-    parser_burn = subparsers.add_parser('burn', help='destroy {} to earn DLA, during an initial period of time')
+    parser_burn = subparsers.add_parser('burn', help='destroy {} to earn XPT, during an initial period of time')
     parser_burn.add_argument('--source', required=True, help='the source address')
     parser_burn.add_argument('--quantity', required=True, help='quantity of {} to be destroyed'.format(config.LTC))
     parser_burn.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
@@ -648,7 +648,7 @@ if __name__ == '__main__':
 
     parser_rps = subparsers.add_parser('rps', help='open a rock-paper-scissors like game')
     parser_rps.add_argument('--source', required=True, help='the source address')
-    parser_rps.add_argument('--wager', required=True, help='the quantity of DLA to wager')
+    parser_rps.add_argument('--wager', required=True, help='the quantity of XPT to wager')
     parser_rps.add_argument('--move', type=int, required=True, help='the selected move')
     parser_rps.add_argument('--possible-moves', type=int, required=True, help='the number of possible moves (odd number greater or equal than 3)')
     parser_rps.add_argument('--expiration', type=int, required=True, help='the number of blocks for which the bet should be valid')
@@ -666,13 +666,13 @@ if __name__ == '__main__':
     parser_publish.add_argument('--data-hex', required=True, help='the hex‐encoded data')
     parser_publish.add_argument('--fee', help='the exact {} fee to be paid to miners'.format(config.LTC))
 
-    parser_address = subparsers.add_parser('balances', help='display the balances of a {} address'.format(config.DLA_NAME))
+    parser_address = subparsers.add_parser('balances', help='display the balances of a {} address'.format(config.XPT_NAME))
     parser_address.add_argument('address', help='the address you are interested in')
 
-    parser_asset = subparsers.add_parser('asset', help='display the basic properties of a {} asset'.format(config.DLA_NAME))
+    parser_asset = subparsers.add_parser('asset', help='display the basic properties of a {} asset'.format(config.XPT_NAME))
     parser_asset.add_argument('asset', help='the asset you are interested in')
 
-    parser_wallet = subparsers.add_parser('wallet', help='list the addresses in your backend wallet along with their balances in all {} assets'.format(config.DLA_NAME))
+    parser_wallet = subparsers.add_parser('wallet', help='list the addresses in your backend wallet along with their balances in all {} assets'.format(config.XPT_NAME))
 
     parser_pending= subparsers.add_parser('pending', help='list pending order matches awaiting {}payment from you'.format(config.LTC))
 
@@ -683,7 +683,7 @@ if __name__ == '__main__':
     parser_rollback.add_argument('block_index', type=int, help='the index of the last known good block')
     parser_rollback.add_argument('--force', action='store_true', help='skip backend check, version check, lockfile check')
 
-    parser_market = subparsers.add_parser('market', help='fill the screen with an always up-to-date summary of the {} market'.format(config.DLA_NAME) )
+    parser_market = subparsers.add_parser('market', help='fill the screen with an always up-to-date summary of the {} market'.format(config.XPT_NAME) )
     parser_market.add_argument('--give-asset', help='only show orders offering to sell GIVE_ASSET')
     parser_market.add_argument('--get-asset', help='only show orders offering to buy GET_ASSET')
 
@@ -755,7 +755,7 @@ if __name__ == '__main__':
     db = util.connect_to_db()
 
     # Version
-    logging.info('Status: Running v{} of czarcraftd.'.format(config.VERSION_STRING, config.DLA_CLIENT))
+    logging.info('Status: Running v{} of paytokensd.'.format(config.VERSION_STRING, config.XPT_CLIENT))
     if not config.FORCE and args.action in ('server', 'reparse', 'rollback'):
         logging.info('Status: Checking version.')
         try:
@@ -877,8 +877,8 @@ if __name__ == '__main__':
     elif args.action == 'bet':
         if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
         deadline = calendar.timegm(dateutil.parser.parse(args.deadline).utctimetuple())
-        wager = util.devise(db, args.wager, config.DLA, 'input')
-        counterwager = util.devise(db, args.counterwager, config.DLA, 'input')
+        wager = util.devise(db, args.wager, config.XPT, 'input')
+        counterwager = util.devise(db, args.counterwager, config.XPT, 'input')
         target_value = util.devise(db, args.target_value, 'value', 'input')
         leverage = util.devise(db, args.leverage, 'leverage', 'input')
 
@@ -898,7 +898,7 @@ if __name__ == '__main__':
 
     elif args.action == 'dividend':
         if args.fee: args.fee = util.devise(db, args.fee, config.LTC, 'input')
-        quantity_per_unit = util.devise(db, args.quantity_per_unit, config.DLA, 'input')
+        quantity_per_unit = util.devise(db, args.quantity_per_unit, config.XPT, 'input')
         cli('create_dividend', {'source': args.source,
                                 'quantity_per_unit': quantity_per_unit,
                                 'asset': args.asset, 'dividend_asset':
@@ -950,7 +950,7 @@ if __name__ == '__main__':
 
     elif args.action == 'rps':
         if args.fee: args.fee = util.devise(db, args.fee, 'LTC', 'input')
-        wager = util.devise(db, args.wager, 'DLA', 'input')
+        wager = util.devise(db, args.wager, 'XPT', 'input')
         random, move_random_hash = generate_move_random_hash(args.move)
         print('random: {}'.format(random))
         print('move_random_hash: {}'.format(move_random_hash))
@@ -1008,7 +1008,7 @@ if __name__ == '__main__':
         locked = results['locked']
         supply = util.devise(db, results['supply'], args.asset, dest='output')
         call_date = util.isodt(results['call_date']) if results['call_date'] else results['call_date']
-        call_price = str(results['call_price']) + ' DLA' if results['call_price'] else results['call_price']
+        call_price = str(results['call_price']) + ' XPT' if results['call_price'] else results['call_price']
 
         print('Asset Name:', args.asset)
         print('Asset ID:', asset_id)

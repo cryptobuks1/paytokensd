@@ -14,7 +14,7 @@ VERSION_REVISION = 0
 VERSION_STRING = str(VERSION_MAJOR) + '.' + str(VERSION_MINOR) + '.' + str(VERSION_REVISION)
 
 
-# Czarcraft protocol
+# Paytokens protocol
 TXTYPE_FORMAT = '>I'
 
 TWO_WEEKS = 2 * 7 * 24 * 3600
@@ -34,12 +34,12 @@ OP_RETURN_MAX_SIZE = 40 # bytes
 
 # Currency agnosticism
 LTC = 'LTC'
-DLA = 'DLA'
+XPT = 'XPT'
 
 LTC_NAME = 'Litecoin'
 LTC_CLIENT = 'litecoind'
-DLA_NAME = 'Czarcraft'
-DLA_CLIENT = 'czarcraftd'
+XPT_NAME = 'Paytokens'
+XPT_CLIENT = 'paytokensd'
 
 DEFAULT_RPC_PORT_TESTNET = 19750
 DEFAULT_RPC_PORT = 9750
@@ -48,7 +48,7 @@ DEFAULT_BACKEND_RPC_PORT_TESTNET = 19332
 DEFAULT_BACKEND_RPC_PORT = 9332
 
 UNSPENDABLE_TESTNET = 'mvCounterpartyXXXXXXXXXXXXXXW24Hef'
-UNSPENDABLE_MAINNET = 'LTCdominationxxxxxxxxxxxxxxxeNp6nT'
+UNSPENDABLE_MAINNET = 'LPaytokensxxxxxxxxxxxxxxxxxxYSXa9a'
 
 # TODO: Update Testnet Specifications
 ADDRESSVERSION_TESTNET = b'\x6f'
@@ -70,18 +70,18 @@ BLOCK_FIRST_MAINNET_TESTCOIN = 278270
 BURN_START_MAINNET_TESTCOIN = 278310
 BURN_END_MAINNET_TESTCOIN = 2500000     # A long time.
 
-BLOCK_FIRST_MAINNET = 678281
-BURN_START_MAINNET = 678282
+BLOCK_FIRST_MAINNET = 745173
+BURN_START_MAINNET = 745174
 BURN_END_MAINNET = 102528000 # TODO: Calculate Outcome
 
 MAX_BURN_BY_ADDRESS = 1000000 * UNIT 	# 1M LTC.
-BURN_MULTIPLIER = 1000
+BURN_MULTIPLIER = 1000000000
 
 # Issuance Fee
 DEFAULT_ISSUANCE_FEE = 1 # Initializing at One
 
 # Protocol defaults
-# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in craftblockd/lib/config.py as well
+# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in payblockd/lib/config.py as well
     # TODO: This should be updated, given their new configurability.
 # TODO: The dust values should be lowered by 90%, once transactions with smaller outputs start confirming faster: <https://github.com/mastercoin-MSC/spec/issues/192>
 DEFAULT_REGULAR_DUST_SIZE = 5011 	  # LTC;

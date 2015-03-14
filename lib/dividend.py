@@ -21,9 +21,9 @@ def validate (db, source, quantity_per_unit, asset, dividend_asset, block_index)
 
     if asset == config.LTC:
         problems.append('cannot pay dividends to holders of {}'.format(config.LTC))
-    if asset == config.DLA:
+    if asset == config.XPT:
         if (not block_index >= 317500) or block_index >= 320000 or config.TESTNET:   # Protocol change.
-            problems.append('cannot pay dividends to holders of {}'.format(config.DLA))
+            problems.append('cannot pay dividends to holders of {}'.format(config.XPT))
 
     if quantity_per_unit <= 0: problems.append('non‐positive quantity per unit')
 
@@ -40,7 +40,7 @@ def validate (db, source, quantity_per_unit, asset, dividend_asset, block_index)
             problems.append('only issuer can pay dividends')
 
     # Examine dividend asset.
-    if dividend_asset in (config.LTC, config.DLA):
+    if dividend_asset in (config.LTC, config.XPT):
         dividend_divisible = True
     else:
         issuances = list(cursor.execute('''SELECT * FROM issuances WHERE (status = ? AND asset = ?)''', ('valid', dividend_asset)))
@@ -87,9 +87,9 @@ def validate (db, source, quantity_per_unit, asset, dividend_asset, block_index)
         if block_index >= 330000 or config.TESTNET: # Protocol change.
             fee = int(0.0002 * config.UNIT * holder_count)
         if fee:
-            balances = list(cursor.execute('''SELECT * FROM balances WHERE (address = ? AND asset = ?)''', (source, config.DLA)))
+            balances = list(cursor.execute('''SELECT * FROM balances WHERE (address = ? AND asset = ?)''', (source, config.XPT)))
             if not balances or balances[0]['quantity'] < fee:
-                problems.append('insufficient funds ({})'.format(config.DLA))
+                problems.append('insufficient funds ({})'.format(config.XPT))
 
     cursor.close()
     return dividend_total, outputs, problems, fee
@@ -122,7 +122,7 @@ def parse (db, tx, message):
         elif len(message) == LENGTH_1:
             quantity_per_unit, asset_id = struct.unpack(FORMAT_1, message)
             asset = util.asset_name(asset_id)
-            dividend_asset = config.DLA
+            dividend_asset = config.XPT
             status = 'valid'
         else:
             raise exceptions.UnpackError
@@ -144,7 +144,7 @@ def parse (db, tx, message):
         # Debit.
         util.debit(db, tx['block_index'], tx['source'], dividend_asset, dividend_total, action='dividend', event=tx['tx_hash'])
         if tx['block_index'] >= 330000 or config.TESTNET: # Protocol change.
-            util.debit(db, tx['block_index'], tx['source'], config.DLA, fee, action='dividend fee', event=tx['tx_hash'])
+            util.debit(db, tx['block_index'], tx['source'], config.XPT, fee, action='dividend fee', event=tx['tx_hash'])
 
         # Credit.
         for output in outputs:

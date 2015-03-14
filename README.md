@@ -1,36 +1,36 @@
 # Description
-Czarcraft is a protocol for the creation and use of decentralised financial
+Paytokens is a protocol for the creation and use of decentralised financial
 instruments such as asset exchanges, contracts for difference and dividend
 payments. It uses Litecoin as a transport layer. The contents of this
-repository, `czarcraftd`, constitute the reference implementation of the
+repository, `paytokensd`, constitute the reference implementation of the
 protocol.
 
-The Czarcraft protocol specification may be found at
-<https://github.com/Czarcraft/Czarcraft>.
+The Paytokens protocol specification may be found at
+<https://github.com/Paytokens/Paytokens>.
 
 # Dependencies
 * [Python 3](http://python.org)
-* Python 3 packages: apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, tornado, flask, Flask-HTTPAuth, pycoin, pyzmq(v2.2+), pycrypto, lockfile, python-bitcoinlib (see [this link](https://github.com/CzarcraftDLA/czarcraftd/blob/master/pip-requirements.txt) for exact working versions)
+* Python 3 packages: apsw, requests, appdirs, prettytable, python-dateutil, json-rpc, tornado, flask, Flask-HTTPAuth, pycoin, pyzmq(v2.2+), pycrypto, lockfile, python-bitcoinlib (see [this link](https://github.com/PaytokensXPT/paytokensd/blob/master/pip-requirements.txt) for exact working versions)
 * Litecoind
 
 # Installation
 
-**NOTE: This section covers manual installation of czarcraftd. If you want more of
-an automated approach to czarcraftd installation for Windows and Linux, see [this link](http://czarcraft.io/docs/build-system/).**
+**NOTE: This section covers manual installation of paytokensd. If you want more of
+an automated approach to paytokensd installation for Windows and Linux, see [this link](http://paytokens.io/docs/build-system/).**
 
-In order for czarcraftd to function, it must be able to communicate with a
+In order for paytokensd to function, it must be able to communicate with a
 running instance of Litecoind or Litecoin-Qt, which handles many Litecoin‐specific
 matters on its behalf, including all wallet and private key management. For
 such interoperability, Litecoind must be run with the following options:
 `-txindex=1` `-server=1`. This may require the setting of a JSON‐RPC password,
 which may be saved in Litecoind’s configuration file.
 
-czarcraftd needs to know at least the JSON‐RPC password of the Litecoind with
+paytokensd needs to know at least the JSON‐RPC password of the Litecoind with
 which it is supposed to communicate. The simplest way to set this is to
-include it in all command‐line invocations of czarcraftd, such as
-`./czarcraftd.py --rpc-password=PASSWORD ACTION`. To make this and other
-options persistent across czarcraftd sessions, one may store the desired
-settings in a configuration file specific to czarcraftd.
+include it in all command‐line invocations of paytokensd, such as
+`./paytokensd.py --rpc-password=PASSWORD ACTION`. To make this and other
+options persistent across paytokensd sessions, one may store the desired
+settings in a configuration file specific to paytokensd.
 
 Note that the syntaxes for the countpartyd and the Litecoind configuraion
 files are not the same. A Litecoind configuration file looks like this:
@@ -41,21 +41,21 @@ files are not the same. A Litecoind configuration file looks like this:
 	txindex=1
 	server=1
 
-However, a czarcraftd configuration file looks like this:
+However, a paytokensd configuration file looks like this:
 
 	[Default]
 	bitcoind-rpc-password=PASSWORD
 
 Note the change in hyphenation between `rpcpassword` and `rpc-password`.
 
-If and only if czarcraftd is to be run on the Litecoin testnet, with the
+If and only if paytokensd is to be run on the Litecoin testnet, with the
 `--testnet` CLI option, Litecoind must be set to do the same (`-testnet=1`).
-czarcraftd may run with the `--testcoin` option on any blockchain,
+paytokensd may run with the `--testcoin` option on any blockchain,
 however.
 
 # Updating your requirements
 
-Sometimes the underlying package requirements may change for `czarcraftd`. If you build and installed it from scratch,
+Sometimes the underlying package requirements may change for `paytokensd`. If you build and installed it from scratch,
 you can manually update these requirements by executing something like:
 ```
     pip install --upgrade -r pip-requirements.txt 
@@ -65,19 +65,19 @@ you can manually update these requirements by executing something like:
 
 The test suite is invoked with `py.test` in the root directory of the repository.
 Litecoind testnet and mainnet must run on the default ports and use the same rpcuser and rpcpassword. 
-Do not include the following values ​​in czarcraftd.conf: bitcoind-rpc-connect, bitcoind-rpc-port, rpc-host, rpc-port and testnet.
+Do not include the following values ​​in paytokensd.conf: bitcoind-rpc-connect, bitcoind-rpc-port, rpc-host, rpc-port and testnet.
 
 # Usage
-The command‐line syntax of czarcraftd is generally that of
-`./czarcraftd.py {OPTIONS} ACTION {ACTION-OPTIONS}`. There is a one action
+The command‐line syntax of paytokensd is generally that of
+`./paytokensd.py {OPTIONS} ACTION {ACTION-OPTIONS}`. There is a one action
 per message type, which action produces and broadcasts such a message; the
 message parameters are specified following the name of the message type. There
 are also actions which do not correspond to message types, but rather exist to
-provide information about the state of the Czarcraft network, e.g. current
+provide information about the state of the Paytokens network, e.g. current
 balances or open orders.
 
 For a summary of the command‐line arguments and options, see
-`./czarcraftd.py --help`.
+`./paytokensd.py --help`.
 
 # Versioning
 * Major version changes require a full rebuild of the database.
@@ -89,7 +89,7 @@ For a summary of the command‐line arguments and options, see
 * Quantities of indivisible assets are written as integers.
 * All other quantities, i.e. prices, odds, leverages, feed values and target
 values, fee multipliers, are specified to four decimal places.
-* czarcraftd identifies an Order, Bet, Order Match or Bet Match by an
+* paytokensd identifies an Order, Bet, Order Match or Bet Match by an
 ‘Order ID’, ‘Bet ID’, ‘Order Match ID’, or ‘Bet Match ID’, respectively. Match
 IDs are concatenations of the hashes of the two transactions which compose the
 corresponding Match, in the order of their appearances in the blockchain.
@@ -113,11 +113,11 @@ The following examples are abridged for parsimony.
 	--to=n3BrDB6zDiEPWEE6wLxywFb4Yp9ZY5fHM7
 	```
 
-* Buy LTC for DLA
+* Buy LTC for XPT
 	
 	```
 	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=LTC
-	--give-quantity=20 --give-asset=DLA --expiration=10 --fee_required=.001
+	--give-quantity=20 --give-asset=XPT --expiration=10 --fee_required=.001
 	```
 
 * Buy BBBC for LTC
@@ -127,9 +127,9 @@ The following examples are abridged for parsimony.
 	--give-quantity=20 --give-asset=LTC --expiration=10 --fee_provided=0.001
 	```
 
-* Buy DLA for BBBC
+* Buy XPT for BBBC
 	```
-	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=DLA
+	order --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --get-quantity=10 --get-asset=XPT
 	--give-quantity=20 --give-asset=BBBC --expiration=10
 	```
 
@@ -150,14 +150,14 @@ The following examples are abridged for parsimony.
 	--fee-multiplier=0.001
 	```
 
-	Note: for some users czarcraftd has trouble parsing spaces in the `--text` argument. One workaround is to
+	Note: for some users paytokensd has trouble parsing spaces in the `--text` argument. One workaround is to
 		add an additional set of quotes. For example, `--text='"Litecoin price feed"'`.
 
 * Bet
 	
 	Equal/Not Equal Bet:
 	
-	Example: Bet on Super Bowl Feed. Denver vs. Seattle. Feed value of 1 means Seattle Wins. Feed value of 2 means 	        	Denver Wins. This command places a 1 DLA bet on the Super Bowl Feed for Seattle to win, paying out 2 to         	1. The bet will expire in 100 blocks and the settlement value of the bet is based on the first feed 	                update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern Standard Time (UTC-0500)
+	Example: Bet on Super Bowl Feed. Denver vs. Seattle. Feed value of 1 means Seattle Wins. Feed value of 2 means 	        	Denver Wins. This command places a 1 XPT bet on the Super Bowl Feed for Seattle to win, paying out 2 to         	1. The bet will expire in 100 blocks and the settlement value of the bet is based on the first feed 	                update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern Standard Time (UTC-0500)
 	```
 	bet --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --feed-address=n3BrDB6zDiEPWEE6wLxywFb4Yp9ZY5fH --bet-type=Equal
 	--deadline=2014-02-03T13:39:00-0500 --wager=1 --counterwager=2 --target-value=1 --expiration=100
@@ -165,7 +165,7 @@ The following examples are abridged for parsimony.
 
 	Contract for Difference:
 	
-	Example: Bet on Litecoin Price Feed. This command places a bearish (short) 1 DLA wager on the price of LTC/USD 				with 2X leverage. The bet will expire in 100 blocks and the settlement value of the bet is based 			on the first feed update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern 					Standard Time (UTC-0500)
+	Example: Bet on Litecoin Price Feed. This command places a bearish (short) 1 XPT wager on the price of LTC/USD 				with 2X leverage. The bet will expire in 100 blocks and the settlement value of the bet is based 			on the first feed update after the deadline timestamp of February 3, 2014 1:39 PM US Eastern 					Standard Time (UTC-0500)
 	```
 	bet --source=mtQheFaSfWELRB2MyMBaiWjdDm6ux9Ezns --feed-address=n3BrDB6zDiEPWEE6wLxywFb4Yp9ZY5fH --bet-type=BearCFD --deadline=2014-02-03T13:39:00-0500 --wager=1 --counterwager=1 --leverage=10080 --expiration=100
 	```
@@ -214,9 +214,9 @@ The following examples are abridged for parsimony.
 	market --get-asset=LTC
 	```
 	
-	To filter the market to only show offers to sell LTC for DLA:
+	To filter the market to only show offers to sell LTC for XPT:
 	```
-	market --give-asset=LTC --get-asset=DLA
+	market --give-asset=LTC --get-asset=XPT
 	```
 
 * Asset
@@ -225,5 +225,5 @@ The following examples are abridged for parsimony.
 
 * Address
 
-	The `address` action displays the details of of all transactions involving the Czarcraft address which is its argument.
+	The `address` action displays the details of of all transactions involving the Paytokens address which is its argument.
 

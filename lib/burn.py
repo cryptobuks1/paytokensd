@@ -7,7 +7,7 @@ from fractions import Fraction
 
 from . import (util, config, exceptions, litecoin, util)
 
-"""Burn {} to earn {} during a special period of time.""".format(config.LTC, config.DLA)
+"""Burn {} to earn {} during a special period of time.""".format(config.LTC, config.XPT)
 
 ID = 60
 
@@ -62,7 +62,7 @@ def parse (db, tx, message=None):
             sent = 0
 
     if status == 'valid':
-        # Calculate quantity of DLA earned. (Maximum 1,000,000 LTC in total, ever.)
+        # Calculate quantity of XPT earned. (Maximum 1,000,000 LTC in total, ever.)
         cursor = db.cursor()
         cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', tx['source']))
         burns = cursor.fetchall()
@@ -77,8 +77,8 @@ def parse (db, tx, message=None):
         multiplier = config.BURN_MULTIPLIER * (1 + (.5 * Fraction(partial_time, total_time)))
         earned = round(burned * multiplier)
 
-        # Credit source address with earned DLA.
-        util.credit(db, tx['block_index'], tx['source'], config.DLA, earned, action='burn', event=tx['tx_hash'])
+        # Credit source address with earned XPT.
+        util.credit(db, tx['block_index'], tx['source'], config.XPT, earned, action='burn', event=tx['tx_hash'])
     else:
         burned = 0
         earned = 0

@@ -407,8 +407,8 @@ class APIServer(threading.Thread):
             return messages
 
         @dispatcher.add_method
-        def get_dla_supply():
-            return util.dla_supply(db)
+        def get_xpt_supply():
+            return util.xpt_supply(db)
 
         @dispatcher.add_method
         def get_asset_info(assets):
@@ -417,12 +417,12 @@ class APIServer(threading.Thread):
             assetsInfo = []
             for asset in assets:
 
-                # LTC and DLA.
-                if asset in [config.LTC, config.DLA]:
+                # LTC and XPT.
+                if asset in [config.LTC, config.XPT]:
                     if asset == config.LTC:
                         supply = litecoin.get_ltc_supply(normalize=False)
                     else:
-                        supply = util.dla_supply(db)
+                        supply = util.xpt_supply(db)
 
                     assetsInfo.append({
                         'asset': asset,
@@ -618,6 +618,6 @@ class APIServer(threading.Thread):
             self.is_ready = True
             IOLoop.instance().start()        
         except OSError:
-            raise Exception("Cannot start the API subsystem. Is {} already running, or is something else listening on port {}?".format(config.DLA_CLIENT, config.RPC_PORT))
+            raise Exception("Cannot start the API subsystem. Is {} already running, or is something else listening on port {}?".format(config.XPT_CLIENT, config.RPC_PORT))
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

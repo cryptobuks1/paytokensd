@@ -162,7 +162,7 @@ def rpc (method, params):
     if response == None:
         if config.TESTNET: network = 'testnet'
         else: network = 'mainnet'
-        raise exceptions.LitecoindRPCError('Cannot communicate with {} Core. ({} is set to run on {}, is {} Core?)'.format(config.LTC_NAME, config.DLA_CLIENT, network, config.LTC_NAME))
+        raise exceptions.LitecoindRPCError('Cannot communicate with {} Core. ({} is set to run on {}, is {} Core?)'.format(config.LTC_NAME, config.XPT_CLIENT, network, config.LTC_NAME))
     elif response.status_code not in (200, 500):
         raise exceptions.LitecoindRPCError(str(response.status_code) + ' ' + response.reason)
 

@@ -9,7 +9,7 @@ sys.path.append(os.path.normpath(os.path.join(CURR_DIR, '..')))
 from lib import (config, api, util, exceptions, litecoin, blocks)
 from lib import (send, order, ltcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
 from lib.exceptions import ConsensusError
-import czarcraftd
+import paytokensd
 
 from fixtures.params import DEFAULT_PARAMS as DP
 from fixtures.scenarios import UNITEST_FIXTURE, INTEGRATION_SCENARIOS, standard_scenarios_params
@@ -128,7 +128,7 @@ def insert_transaction(transaction, db):
 # we use the same database (in memory) for speed
 def initialise_rawtransactions_db(db):
     if pytest.config.option.initrawtransactions:
-        czarcraftd.set_options(testnet=True, **COUNTERPARTYD_OPTIONS)
+        paytokensd.set_options(testnet=True, **COUNTERPARTYD_OPTIONS)
         cursor = db.cursor()
         cursor.execute('DROP TABLE  IF EXISTS raw_transactions')
         cursor.execute('CREATE TABLE IF NOT EXISTS raw_transactions(tx_hash TEXT UNIQUE, tx_hex TEXT, tx_json TEXT)')
@@ -167,7 +167,7 @@ def initialise_db(db):
     insert_block(db, config.BURN_START - 1)
 
 def run_scenario(scenario, rawtransactions_db):
-    czarcraftd.set_options(database_file=':memory:', testnet=True, **COUNTERPARTYD_OPTIONS)
+    paytokensd.set_options(database_file=':memory:', testnet=True, **COUNTERPARTYD_OPTIONS)
     config.PREFIX = b'TESTXXXX'
     config.FIRST_MULTISIG_BLOCK_TESTNET = 1
     config.CHECKPOINTS_TESTNET = {}
