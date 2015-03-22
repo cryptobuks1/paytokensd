@@ -16,8 +16,8 @@ pytest==2.5.1
 #############
 #paytokensd specific deps
 
-#pycoin==0.51
-https://github.com/Treefunder/pycoin/archive/0.52-reddcraft-testing.zip
+pycoin==0.52
+#https://github.com/Treefunder/pycoin/archive/0.52-reddcraft-testing.zip
 
 requests==2.3.0
 
