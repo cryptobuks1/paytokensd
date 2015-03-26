@@ -16,7 +16,8 @@ pytest==2.5.1
 #############
 #paytokensd specific deps
 
-pycoin==0.26
+#pycoin==0.26
+https://github.com/Treefunder/pycoin/archive/0.52.zip
 
 requests==2.3.0
 
