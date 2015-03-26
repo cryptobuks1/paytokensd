@@ -149,6 +149,9 @@ def wallet_unlock ():
         return True    # Wallet is unencrypted.
 
 def rpc (method, params):
+    # Treefunder : Uncomment to view rpc calls
+    #print(method)
+    #print(params)
     starttime = time.time()
     headers = {'content-type': 'application/json'}
     payload = {
@@ -496,8 +499,7 @@ def private_key_to_public_key (private_key_wif):
     else:
         allowable_wif_prefixes = [config.PRIVATEKEY_VERSION_MAINNET]
     try:
-        secret_exponent, compressed = wif_to_tuple_of_secret_exponent_compressed(
-                private_key_wif, allowable_wif_prefixes=allowable_wif_prefixes)
+        secret_exponent, compressed = wif_to_tuple_of_secret_exponent_compressed(private_key_wif, allowable_wif_prefixes=allowable_wif_prefixes)
         #secret_exponent, compressed = wif_to_tuple_of_secret_exponent_compressed(private_key_wif, [wif_prefix(is_test=config.TESTNET)])
     except EncodingError:
         raise exceptions.AltcoinSupportError('pycoin: unsupported WIF prefix')
@@ -699,14 +701,14 @@ def sign_tx (unsigned_tx_hex, private_key_wif=None):
         tx_hex = unsigned_tx_hex
         while True: # pyltctool doesn’t implement `signall`
             try:
-                tx_hex = subprocess.check_output(['pyltctool', 'sign', tx_hex, str(i), private_key_wif], stderr=subprocess.DEVNULL)
+                tx_hex = subprocess.check_output(['pybtctool', 'sign', tx_hex, str(i), private_key_wif], stderr=subprocess.DEVNULL)
             except Exception as e:
                 break
         if tx_hex != unsigned_tx_hex:
             signed_tx_hex = tx_hex.decode('utf-8')
             return signed_tx_hex[:-1]   # Get rid of newline.
         else:
-            raise exceptions.TransactionError('Could not sign transaction with pyltctool.')
+            raise exceptions.TransactionError('Could not sign transaction with pybtctool.')
 
     else:   # Assume source is in wallet and wallet is unlocked.
         result = sign_raw_transaction(unsigned_tx_hex)
