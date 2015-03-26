@@ -13,10 +13,10 @@ the address that is the source of the feed in an output which includes the
 
 Broadcasts without a price may not be used for betting. Broadcasts about events
 with a small number of possible outcomes (e.g. sports games), should be
-written, for example, such that a price of 1 XCP means one outcome, 2 XCP means
+written, for example, such that a price of 1 XPT means one outcome, 2 XPT means
 another, etc., which schema should be described in the 'text' field.
 
-fee_fraction: .05 XCP means 5%. It may be greater than 1, however; but
+fee_fraction: .05 XPT means 5%. It may be greater than 1, however; but
 because it is stored as a four‐byte integer, it may not be greater than about
 42.
 """
@@ -27,7 +27,7 @@ D = decimal.Decimal
 from fractions import Fraction
 import logging
 
-from . import (util, exceptions, config, bitcoin)
+from . import (util, exceptions, config, litecoin)
 from . import (bet)
 
 FORMAT = '>IdI'
@@ -204,16 +204,16 @@ def parse (db, tx, message):
                 if bull_credit >= escrow_less_fee:
                     bull_credit = escrow_less_fee
                     bear_credit = 0
-                    util.credit(db, tx['block_index'], bull_address, config.XCP, bull_credit)
+                    util.credit(db, tx['block_index'], bull_address, config.XPT, bull_credit)
                     bet_match_status = 'settled: liquidated for bull'
                 elif bull_credit <= 0:
                     bull_credit = 0
                     bear_credit = escrow_less_fee
-                    util.credit(db, tx['block_index'], bear_address, config.XCP, bear_credit)
+                    util.credit(db, tx['block_index'], bear_address, config.XPT, bear_credit)
                     bet_match_status = 'settled: liquidated for bear'
 
                 # Pay fee to feed.
-                util.credit(db, tx['block_index'], bet_match['feed_address'], config.XCP, fee)
+                util.credit(db, tx['block_index'], bet_match['feed_address'], config.XPT, fee)
 
                 # For logging purposes.
                 bindings = {
@@ -234,11 +234,11 @@ def parse (db, tx, message):
             elif timestamp >= bet_match['deadline']:
                 bet_match_status = 'settled'
 
-                util.credit(db, tx['block_index'], bull_address, config.XCP, bull_credit)
-                util.credit(db, tx['block_index'], bear_address, config.XCP, bear_credit)
+                util.credit(db, tx['block_index'], bull_address, config.XPT, bull_credit)
+                util.credit(db, tx['block_index'], bear_address, config.XPT, bear_credit)
 
                 # Pay fee to feed.
-                util.credit(db, tx['block_index'], bet_match['feed_address'], config.XCP, fee)
+                util.credit(db, tx['block_index'], bet_match['feed_address'], config.XPT, fee)
 
                 # For logging purposes.
                 bindings = {
@@ -269,15 +269,15 @@ def parse (db, tx, message):
             # Decide who won, and credit appropriately.
             if value == bet_match['target_value']:
                 winner = 'Equal'
-                util.credit(db, tx['block_index'], equal_address, config.XCP, escrow_less_fee)
+                util.credit(db, tx['block_index'], equal_address, config.XPT, escrow_less_fee)
                 bet_match_status = 'settled: for equal'
             else:
                 winner = 'NotEqual'
-                util.credit(db, tx['block_index'], notequal_address, config.XCP, escrow_less_fee)
+                util.credit(db, tx['block_index'], notequal_address, config.XPT, escrow_less_fee)
                 bet_match_status = 'settled: for notequal'
 
             # Pay fee to feed.
-            util.credit(db, tx['block_index'], bet_match['feed_address'], config.XCP, fee)
+            util.credit(db, tx['block_index'], bet_match['feed_address'], config.XPT, fee)
 
             # For logging purposes.
             bindings = {

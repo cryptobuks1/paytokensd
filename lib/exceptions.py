@@ -18,9 +18,9 @@ class InputError(Exception):
 class RPCError (Exception):
     pass
 
-class BitcoindError (Exception):
+class LitecoindError (Exception):
     pass
-class BitcoindRPCError (BitcoindError):
+class LitecoindRPCError (LitecoindError):
     pass
 class InsightError (Exception):
     pass
@@ -69,7 +69,7 @@ class IssuanceError (MessageError):
     pass
 class DividendError (MessageError):
     pass
-class BTCPayError (MessageError):
+class LTCPayError (MessageError):
     pass
 class CancelError (MessageError):
     pass

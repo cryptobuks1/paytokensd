@@ -3,7 +3,7 @@
 import binascii
 import struct
 
-from . import (util, config, exceptions, bitcoin, util, rps)
+from . import (util, config, exceptions, litecoin, util, rps)
 # move random rps_match_id
 FORMAT = '>H16s32s32s'
 LENGTH = 2 + 16 + 32 + 32
@@ -53,7 +53,7 @@ def validate (db, source, move, random, rps_match_id):
         txn = 1
         rps_match_status = ['pending', 'resolved and pending']
 
-    move_random_hash = bitcoin.dhash(random_bytes + int(move).to_bytes(2, byteorder='big'))
+    move_random_hash = litecoin.dhash(random_bytes + int(move).to_bytes(2, byteorder='big'))
     move_random_hash = binascii.hexlify(move_random_hash).decode('utf-8')
     if rps_match['tx{}_move_random_hash'.format(txn)] != move_random_hash:
         problems.append('invalid move or random value')

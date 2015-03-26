@@ -12,7 +12,7 @@ def get_host():
         return 'https://chain.so'
 
 def sochain_network():
-	network = config.BTC
+	network = config.LTC
 	if config.TESTNET:
 		network += 'TEST'
 	return network

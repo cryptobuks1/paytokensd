@@ -1,4 +1,4 @@
-#counterparty dependencies (installed via pip)
+#paytokens dependencies (installed via pip)
 
 appdirs==1.2.0
 #helps locate OS-specific directories (user data dir, etc)
@@ -14,7 +14,7 @@ json-rpc==1.6.0
 pytest==2.5.1
 
 #############
-#counterpartyd specific deps
+#paytokensd specific deps
 
 pycoin==0.26
 

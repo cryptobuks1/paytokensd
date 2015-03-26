@@ -5,7 +5,7 @@
 import struct
 import binascii
 
-from . import (util, config, exceptions, bitcoin, util)
+from . import (util, config, exceptions, litecoin, util)
 
 ID = 100
 

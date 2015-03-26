@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-# Filled orders may not be re‐opened, so only orders not involving BTC (and so
+# Filled orders may not be re‐opened, so only orders not involving LTC (and so
 # which cannot have expired order matches) may be filled.
 
 import struct
@@ -8,21 +8,21 @@ import decimal
 D = decimal.Decimal
 import logging
 
-from . import (util, config, exceptions, bitcoin, util)
+from . import (util, config, exceptions, litecoin, util)
 
 FORMAT = '>QQQQHQ'
 LENGTH = 8 + 8 + 8 + 8 + 2 + 8
 ID = 10
 
 def exact_penalty (db, address, block_index, order_match_id):
-    # Penalize addresses that don’t make BTC payments. If an address lets an
-    # order match expire, expire sell BTC orders from that address.
+    # Penalize addresses that don’t make LTC payments. If an address lets an
+    # order match expire, expire sell LTC orders from that address.
     cursor = db.cursor()
 
     # Orders.
     bad_orders = list(cursor.execute('''SELECT * FROM orders \
                                         WHERE (source = ? AND give_asset = ? AND status = ?)''',
-                                     (address, config.BTC, 'open')))
+                                     (address, config.LTC, 'open')))
     for bad_order in bad_orders:
         cancel_order(db, bad_order, 'expired', block_index)
 
@@ -30,7 +30,7 @@ def exact_penalty (db, address, block_index, order_match_id):
         # Order matches.
         bad_order_matches = list(cursor.execute('''SELECT * FROM order_matches \
                                                    WHERE ((tx0_address = ? AND forward_asset = ?) OR (tx1_address = ? AND backward_asset = ?)) AND (status = ?)''',
-                                         (address, config.BTC, address, config.BTC, 'pending')))
+                                         (address, config.LTC, address, config.LTC, 'pending')))
         for bad_order_match in bad_order_matches:
             cancel_order_match(db, bad_order_match, 'expired', block_index)
 
@@ -50,7 +50,7 @@ def cancel_order (db, order, status, block_index):
     cursor.execute(sql, bindings)
     util.message(db, block_index, 'update', 'orders', bindings)
 
-    if order['give_asset'] != config.BTC:    # Can’t credit BTC.
+    if order['give_asset'] != config.LTC:    # Can’t credit LTC.
         util.credit(db, block_index, order['source'], order['give_asset'], order['give_remaining'], event=order['tx_hash'])
 
     if status == 'expired':
@@ -100,14 +100,14 @@ def cancel_order_match (db, order_match, status, block_index):
     tx0_order = orders[0]
     if tx0_order['status'] in ('expired', 'cancelled'):
         tx0_order_status = tx0_order['status']
-        if order_match['forward_asset'] != config.BTC:
+        if order_match['forward_asset'] != config.LTC:
             util.credit(db, block_index, order_match['tx0_address'],
                         order_match['forward_asset'],
                         order_match['forward_quantity'], event=order_match['id'])
     else:
         tx0_give_remaining = tx0_order['give_remaining'] + order_match['forward_quantity']
         tx0_get_remaining = tx0_order['get_remaining'] + order_match['backward_quantity']
-        if tx0_order['get_asset'] == config.BTC and (block_index >= 297000 or config.TESTNET):    # Protocol change.
+        if tx0_order['get_asset'] == config.LTC and (block_index >= 297000 or config.TESTNET):    # Protocol change.
             tx0_fee_required_remaining = tx0_order['fee_required_remaining'] + order_match['fee_paid']
         else:
             tx0_fee_required_remaining = tx0_order['fee_required_remaining']
@@ -131,14 +131,14 @@ def cancel_order_match (db, order_match, status, block_index):
     tx1_order = orders[0]
     if tx1_order['status'] in ('expired', 'cancelled'):
         tx1_order_status = tx1_order['status']
-        if order_match['backward_asset'] != config.BTC:
+        if order_match['backward_asset'] != config.LTC:
             util.credit(db, block_index, order_match['tx1_address'],
                         order_match['backward_asset'],
                         order_match['backward_quantity'], event=order_match['id'])
     else:
         tx1_give_remaining = tx1_order['give_remaining'] + order_match['backward_quantity']
         tx1_get_remaining = tx1_order['get_remaining'] + order_match['forward_quantity']
-        if tx1_order['get_asset'] == config.BTC and (block_index >= 297000 or config.TESTNET):    # Protocol change.
+        if tx1_order['get_asset'] == config.LTC and (block_index >= 297000 or config.TESTNET):    # Protocol change.
             tx1_fee_required_remaining = tx1_order['fee_required_remaining'] + order_match['fee_paid']
         else:
             tx1_fee_required_remaining = tx1_order['fee_required_remaining']
@@ -162,9 +162,9 @@ def cancel_order_match (db, order_match, status, block_index):
 
     # Penalize tardiness.
     if block_index >= 313900 or config.TESTNET:  # Protocol change.
-        if tx0_order['status'] == 'expired' and order_match['forward_asset'] == config.BTC:
+        if tx0_order['status'] == 'expired' and order_match['forward_asset'] == config.LTC:
             exact_penalty(db, order_match['tx0_address'], block_index, order_match['id'])
-        if tx1_order['status'] == 'expired' and order_match['backward_asset'] == config.BTC:
+        if tx1_order['status'] == 'expired' and order_match['backward_asset'] == config.LTC:
             exact_penalty(db, order_match['tx1_address'], block_index, order_match['id'])
 
     # Re‐match.
@@ -195,8 +195,8 @@ def validate (db, source, give_asset, give_quantity, get_asset, get_quantity, ex
     problems = []
     cursor = db.cursor()
 
-    if give_asset == config.BTC and get_asset == config.BTC:
-        problems.append('cannot trade {} for itself'.format(config.BTC))
+    if give_asset == config.LTC and get_asset == config.LTC:
+        problems.append('cannot trade {} for itself'.format(config.LTC))
 
     if not isinstance(give_quantity, int):
         problems.append('give_quantity must be in satoshis')
@@ -221,10 +221,10 @@ def validate (db, source, give_asset, give_quantity, get_asset, get_quantity, ex
     if not give_quantity or not get_quantity:
         problems.append('zero give or zero get')
     cursor.execute('select * from issuances where (status = ? and asset = ?)', ('valid', give_asset))
-    if give_asset not in (config.BTC, config.XCP) and not cursor.fetchall():
+    if give_asset not in (config.LTC, config.XPT) and not cursor.fetchall():
         problems.append('no such asset to give ({})'.format(give_asset))
     cursor.execute('select * from issuances where (status = ? and asset = ?)', ('valid', get_asset))
-    if get_asset not in (config.BTC, config.XCP) and not cursor.fetchall():
+    if get_asset not in (config.LTC, config.XPT) and not cursor.fetchall():
         problems.append('no such asset to get ({})'.format(get_asset))
     if expiration > config.MAX_EXPIRATION:
         problems.append('expiration overflow')
@@ -239,7 +239,7 @@ def validate (db, source, give_asset, give_quantity, get_asset, get_quantity, ex
 def compose (db, source, give_asset, give_quantity, get_asset, get_quantity, expiration, fee_required):
     cursor = db.cursor()
     balances = list(cursor.execute('''SELECT * FROM balances WHERE (address = ? AND asset = ?)''', (source, give_asset)))
-    if give_asset != config.BTC and (not balances or balances[0]['quantity'] < give_quantity):
+    if give_asset != config.LTC and (not balances or balances[0]['quantity'] < give_quantity):
         raise exceptions.OrderError('insufficient funds')
 
     problems = validate(db, source, give_asset, give_quantity, get_asset, get_quantity, expiration, fee_required, util.last_block(db)['block_index'])
@@ -276,7 +276,7 @@ def parse (db, tx, message):
         order_parse_cursor.execute('''SELECT * FROM balances \
                                       WHERE (address = ? AND asset = ?)''', (tx['source'], give_asset))
         balances = list(order_parse_cursor)
-        if give_asset != config.BTC:
+        if give_asset != config.LTC:
             if not balances:
                 give_quantity = 0
             else:
@@ -290,7 +290,7 @@ def parse (db, tx, message):
 
     # Debit give quantity. (Escrow.)
     if status == 'open':
-        if give_asset != config.BTC:  # No need (or way) to debit BTC.
+        if give_asset != config.LTC:  # No need (or way) to debit LTC.
             util.debit(db, tx['block_index'], tx['source'], give_asset, give_quantity, event=tx['tx_hash'])
 
     # Add parsed transaction to message-type–specific table.
@@ -379,8 +379,8 @@ def match (db, tx, block_index=None):
         tx0_fee_required_remaining = tx0['fee_required_remaining']
         tx0_fee_provided_remaining = tx0['fee_provided_remaining']
 
-        # Make sure that that both orders still have funds remaining (if order involves BTC, and so cannot be ‘filled’).
-        if tx0['give_asset'] == config.BTC or tx0['get_asset'] == config.BTC: # Gratuitous
+        # Make sure that that both orders still have funds remaining (if order involves LTC, and so cannot be ‘filled’).
+        if tx0['give_asset'] == config.LTC or tx0['get_asset'] == config.LTC: # Gratuitous
             if tx0_give_remaining <= 0 or tx1_give_remaining <= 0:
                 logging.debug('Skipping: negative give quantity remaining')
                 continue
@@ -433,15 +433,15 @@ def match (db, tx, block_index=None):
             forward_asset, backward_asset = tx1['get_asset'], tx1['give_asset']
 
             if block_index >= 313900 or config.TESTNET: # Protocol change.
-                min_btc_quantity = 0.001 * config.UNIT  # 0.001 BTC
-                if (forward_asset == config.BTC and forward_quantity <= min_btc_quantity) or (backward_asset == config.BTC and backward_quantity <= min_btc_quantity):
-                    logging.debug('Skipping: below minimum {} quantity'.format(config.BTC))
+                min_ltc_quantity = 0.001 * config.UNIT  # 0.001 LTC
+                if (forward_asset == config.LTC and forward_quantity <= min_ltc_quantity) or (backward_asset == config.LTC and backward_quantity <= min_ltc_quantity):
+                    logging.debug('Skipping: below minimum {} quantity'.format(config.LTC))
                     continue
 
             # Check and update fee remainings.
             fee = 0
             if block_index >= 286500 or config.TESTNET: # Protocol change. Deduct fee_required from fee_provided_remaining, etc., if possible (else don’t match).
-                if tx1['get_asset'] == config.BTC:
+                if tx1['get_asset'] == config.LTC:
                     
                     if block_index >= 310500 or config.TESTNET:     # Protocol change.
                         fee = int(tx1['fee_required'] * util.price(backward_quantity, tx1['give_quantity'], block_index))
@@ -457,7 +457,7 @@ def match (db, tx, block_index=None):
                         if block_index >= 287800 or config.TESTNET:  # Protocol change.
                             tx1_fee_required_remaining -= fee
 
-                elif tx1['give_asset'] == config.BTC:
+                elif tx1['give_asset'] == config.LTC:
 
                     if block_index >= 310500 or config.TESTNET:      # Protocol change.
                         fee = int(tx0['fee_required'] * util.price(backward_quantity, tx0['give_quantity'], block_index))
@@ -474,12 +474,12 @@ def match (db, tx, block_index=None):
                             tx0_fee_required_remaining -= fee
                             
             else:   # Don’t deduct.
-                if tx1['get_asset'] == config.BTC:
+                if tx1['get_asset'] == config.LTC:
                     if tx0_fee_provided_remaining < tx1['fee_required']: continue
-                elif tx1['give_asset'] == config.BTC:
+                elif tx1['give_asset'] == config.LTC:
                     if tx1_fee_provided_remaining < tx0['fee_required']: continue
 
-            if config.BTC in (tx1['give_asset'], tx1['get_asset']):
+            if config.LTC in (tx1['give_asset'], tx1['get_asset']):
                 status = 'pending'
             else:
                 status = 'completed'
@@ -489,7 +489,7 @@ def match (db, tx, block_index=None):
                 util.credit(db, tx['block_index'], tx0['source'], tx0['get_asset'],
                                     backward_quantity, event=order_match_id)
 
-            # Debit the order, even if it involves giving bitcoins, and so one
+            # Debit the order, even if it involves giving litecoins, and so one
             # can't debit the sending account.
             # Get remainings may be negative.
             tx0_give_remaining -= forward_quantity
@@ -501,7 +501,7 @@ def match (db, tx, block_index=None):
             # tx0
             tx0_status = 'open'
             if tx0_give_remaining <= 0 or (tx0_get_remaining <= 0 and (block_index >= 292000 or config.TESTNET)):    # Protocol change
-                if tx0['give_asset'] != config.BTC and tx0['get_asset'] != config.BTC:
+                if tx0['give_asset'] != config.LTC and tx0['get_asset'] != config.LTC:
                     # Fill order, and recredit give_remaining.
                     tx0_status = 'filled'
                     util.credit(db, block_index, tx0['source'], tx0['give_asset'], tx0_give_remaining, event=tx1['tx_hash'], action='filled')
@@ -518,7 +518,7 @@ def match (db, tx, block_index=None):
             util.message(db, block_index, 'update', 'orders', bindings)
             # tx1
             if tx1_give_remaining <= 0 or (tx1_get_remaining <= 0 and (block_index >= 292000 or config.TESTNET)):    # Protocol change
-                if tx1['give_asset'] != config.BTC and tx1['get_asset'] != config.BTC:
+                if tx1['give_asset'] != config.LTC and tx1['get_asset'] != config.LTC:
                     # Fill order, and recredit give_remaining.
                     tx1_status = 'filled'
                     util.credit(db, block_index, tx1['source'], tx1['give_asset'], tx1_give_remaining, event=tx0['tx_hash'], action='filled')
@@ -576,14 +576,14 @@ def match (db, tx, block_index=None):
 def expire (db, block_index):
     cursor = db.cursor()
 
-    # Expire orders and give refunds for the quantity give_remaining (if non-zero; if not BTC).
+    # Expire orders and give refunds for the quantity give_remaining (if non-zero; if not LTC).
     cursor.execute('''SELECT * FROM orders \
                       WHERE (status = ? AND expire_index < ?)''', ('open', block_index))
     orders = list(cursor)
     for order in orders:
         cancel_order(db, order, 'expired', block_index)
 
-    # Expire order_matches for BTC with no BTC.
+    # Expire order_matches for LTC with no LTC.
     cursor.execute('''SELECT * FROM order_matches \
                       WHERE (status = ? and match_expire_index < ?)''', ('pending', block_index))
     order_matches = list(cursor)

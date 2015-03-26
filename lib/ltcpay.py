@@ -3,7 +3,7 @@
 import binascii
 import struct
 
-from . import (util, config, exceptions, bitcoin, util)
+from . import (util, config, exceptions, litecoin, util)
 
 FORMAT = '>32s32s'
 LENGTH = 32 + 32
@@ -36,32 +36,32 @@ def validate (db, source, order_match_id, block_index):
         elif order_match['status'] != 'pending':
             raise exceptions.OrderError('unrecognised order match status')
 
-    # Figure out to which address the BTC are being paid.
+    # Figure out to which address the LTC are being paid.
     # Check that source address is correct.
-    if order_match['backward_asset'] == config.BTC:
+    if order_match['backward_asset'] == config.LTC:
         if source != order_match['tx1_address'] and not (block_index >= 313900 or config.TESTNET):  # Protocol change.
             problems.append('incorrect source address')
         destination = order_match['tx0_address']
-        btc_quantity = order_match['backward_quantity']
+        ltc_quantity = order_match['backward_quantity']
         escrowed_asset  = order_match['forward_asset']
         escrowed_quantity = order_match['forward_quantity']
-    elif order_match['forward_asset'] == config.BTC:
+    elif order_match['forward_asset'] == config.LTC:
         if source != order_match['tx0_address'] and not (block_index >= 313900 or config.TESTNET):  # Protocol change.
             problems.append('incorrect source address')
         destination = order_match['tx1_address']
-        btc_quantity = order_match['forward_quantity']
+        ltc_quantity = order_match['forward_quantity']
         escrowed_asset  = order_match['backward_asset']
         escrowed_quantity = order_match['backward_quantity']
     else:
         assert False
 
-    return destination, btc_quantity, escrowed_asset, escrowed_quantity, order_match, problems
+    return destination, ltc_quantity, escrowed_asset, escrowed_quantity, order_match, problems
 
 def compose (db, source, order_match_id):
     tx0_hash, tx1_hash = order_match_id[:64], order_match_id[64:] # UTF-8 encoding means that the indices are doubled.
 
-    destination, btc_quantity, escrowed_asset, escrowed_quantity, order_match, problems = validate(db, source, order_match_id, util.last_block(db)['block_index'])
-    if problems: raise exceptions.BTCPayError(problems)
+    destination, ltc_quantity, escrowed_asset, escrowed_quantity, order_match, problems = validate(db, source, order_match_id, util.last_block(db)['block_index'])
+    if problems: raise exceptions.LTCPayError(problems)
 
     # Warn if down to the wire.
     time_left = order_match['match_expire_index'] - util.last_block(db)['block_index']
@@ -73,7 +73,7 @@ def compose (db, source, order_match_id):
     tx0_hash_bytes, tx1_hash_bytes = binascii.unhexlify(bytes(tx0_hash, 'utf-8')), binascii.unhexlify(bytes(tx1_hash, 'utf-8'))
     data = config.PREFIX + struct.pack(config.TXTYPE_FORMAT, ID)
     data += struct.pack(FORMAT, tx0_hash_bytes, tx1_hash_bytes)
-    return (source, [(destination, btc_quantity)], data)
+    return (source, [(destination, ltc_quantity)], data)
 
 def parse (db, tx, message):
     cursor = db.cursor()
@@ -90,16 +90,16 @@ def parse (db, tx, message):
         status = 'invalid: could not unpack'
 
     if status == 'valid':
-        destination, btc_quantity, escrowed_asset, escrowed_quantity, order_match, problems = validate(db, tx['source'], order_match_id, tx['block_index'])
+        destination, ltc_quantity, escrowed_asset, escrowed_quantity, order_match, problems = validate(db, tx['source'], order_match_id, tx['block_index'])
         if problems:
             order_match = None
             status = 'invalid: ' + '; '.join(problems)
 
     if status == 'valid':
-        # BTC must be paid all at once.
-        if tx['btc_amount'] >= btc_quantity:
+        # LTC must be paid all at once.
+        if tx['ltc_amount'] >= ltc_quantity:
 
-            # Credit source address for the currency that he bought with the bitcoins.
+            # Credit source address for the currency that he bought with the litecoins.
             util.credit(db, tx['block_index'], tx['source'], escrowed_asset, escrowed_quantity)
             status = 'valid'
 
@@ -119,11 +119,11 @@ def parse (db, tx, message):
         'block_index': tx['block_index'],
         'source': tx['source'],
         'destination': tx['destination'],
-        'btc_amount': tx['btc_amount'],
+        'ltc_amount': tx['ltc_amount'],
         'order_match_id': order_match_id,
         'status': status,
     }
-    sql='insert into btcpays values(:tx_index, :tx_hash, :block_index, :source, :destination, :btc_amount, :order_match_id, :status)'
+    sql='insert into ltcpays values(:tx_index, :tx_hash, :block_index, :source, :destination, :ltc_amount, :order_match_id, :status)'
     cursor.execute(sql, bindings)
 
 

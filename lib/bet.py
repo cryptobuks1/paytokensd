@@ -7,7 +7,7 @@ in transaction outputs.
 For CFD leverage, 1x = 5040, 2x = 10080, etc.: 5040 is a superior highly
 composite number and a colossally abundant number, and has 1-10, 12 as factors.
 
-All wagers are in XCP.
+All wagers are in XPT.
 
 Expiring a bet match doesn’t re‐open the constituent bets. (So all bets may be ‘filled’.)
 """
@@ -18,7 +18,7 @@ D = decimal.Decimal
 import time
 import logging
 
-from . import (util, config, bitcoin, exceptions, util)
+from . import (util, config, litecoin, exceptions, util)
 
 FORMAT = '>HIQQdII'
 LENGTH = 2 + 4 + 8 + 8 + 8 + 4 + 4
@@ -36,7 +36,7 @@ def cancel_bet (db, bet, status, block_index):
     cursor.execute(sql, bindings)
     util.message(db, block_index, 'update', 'bets', bindings)
 
-    util.credit(db, block_index, bet['source'], config.XCP, bet['wager_remaining'], action='recredit wager remaining', event=bet['tx_hash'])
+    util.credit(db, block_index, bet['source'], config.XPT, bet['wager_remaining'], action='recredit wager remaining', event=bet['tx_hash'])
 
     cursor = db.cursor()
 
@@ -46,11 +46,11 @@ def cancel_bet_match (db, bet_match, status, block_index):
     cursor = db.cursor()
 
     # Recredit tx0 address.
-    util.credit(db, block_index, bet_match['tx0_address'], config.XCP,
+    util.credit(db, block_index, bet_match['tx0_address'], config.XPT,
                 bet_match['forward_quantity'], action='recredit forward quantity', event=bet_match['id'])
 
     # Recredit tx1 address.
-    util.credit(db, block_index, bet_match['tx1_address'], config.XCP,
+    util.credit(db, block_index, bet_match['tx1_address'], config.XPT,
                 bet_match['backward_quantity'], action='recredit backward quantity', event=bet_match['id'])
 
     # Update status of bet match.
@@ -178,7 +178,7 @@ def parse (db, tx, message):
 
         # Overbet
         bet_parse_cursor.execute('''SELECT * FROM balances \
-                                    WHERE (address = ? AND asset = ?)''', (tx['source'], config.XCP))
+                                    WHERE (address = ? AND asset = ?)''', (tx['source'], config.XPT))
         balances = list(bet_parse_cursor)
         if not balances:
             wager_quantity = 0
@@ -194,7 +194,7 @@ def parse (db, tx, message):
 
     # Debit quantity wagered. (Escrow.)
     if status == 'open':
-        util.debit(db, tx['block_index'], tx['source'], config.XCP, wager_quantity)
+        util.debit(db, tx['block_index'], tx['source'], config.XPT, wager_quantity)
 
     # Add parsed transaction to message-type–specific table.
     bindings = {
@@ -328,7 +328,7 @@ def match (db, tx):
             if tx0_wager_remaining <= 0 or tx0_counterwager_remaining <= 0:
                 # Fill order, and recredit give_remaining.
                 tx0_status = 'filled'
-                util.credit(db, tx1['block_index'], tx0['source'], config.XCP, tx0_wager_remaining, event=tx1['tx_hash'], action='filled')
+                util.credit(db, tx1['block_index'], tx0['source'], config.XPT, tx0_wager_remaining, event=tx1['tx_hash'], action='filled')
             bindings = {
                 'wager_remaining': tx0_wager_remaining,
                 'counterwager_remaining': tx0_counterwager_remaining,
@@ -343,7 +343,7 @@ def match (db, tx):
                 if tx1_wager_remaining <= 0 or tx1_counterwager_remaining <= 0:
                     # Fill order, and recredit give_remaining.
                     tx1_status = 'filled'
-                    util.credit(db, tx1['block_index'], tx1['source'], config.XCP, tx1_wager_remaining, event=tx1['tx_hash'], action='filled')
+                    util.credit(db, tx1['block_index'], tx1['source'], config.XPT, tx1_wager_remaining, event=tx1['tx_hash'], action='filled')
             # tx1
             bindings = {
                 'wager_remaining': tx1_wager_remaining,

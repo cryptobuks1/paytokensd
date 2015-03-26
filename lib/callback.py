@@ -6,7 +6,7 @@ import struct
 import decimal
 D = decimal.Decimal
 
-from . import (util, config, exceptions, bitcoin, util)
+from . import (util, config, exceptions, litecoin, util)
 from . import order
 
 FORMAT = '>dQ'
@@ -90,7 +90,7 @@ def validate (db, source, fraction, asset, block_time, block_index, parse):
     callback_total = sum([output['callback_quantity'] for output in outputs])
     if not callback_total: problems.append('nothing called back')
 
-    balances = list(cursor.execute('''SELECT * FROM balances WHERE (address = ? AND asset = ?)''', (source, config.XCP)))
+    balances = list(cursor.execute('''SELECT * FROM balances WHERE (address = ? AND asset = ?)''', (source, config.XPT)))
     if not balances or balances[0]['quantity'] < (call_price * callback_total):
         problems.append('insufficient funds')
 
@@ -127,14 +127,14 @@ def parse (db, tx, message):
     if status == 'valid':
         # Issuer.
         assert call_price * callback_total == int(call_price * callback_total)
-        util.debit(db, tx['block_index'], tx['source'], config.XCP, int(call_price * callback_total))
+        util.debit(db, tx['block_index'], tx['source'], config.XPT, int(call_price * callback_total))
         util.credit(db, tx['block_index'], tx['source'], asset, callback_total)
 
         # Holders.
         for output in outputs:
             assert call_price * output['callback_quantity'] == int(call_price * output['callback_quantity'])
             util.debit(db, tx['block_index'], output['address'], asset, output['callback_quantity'])
-            util.credit(db, tx['block_index'], output['address'], config.XCP, int(call_price * output['callback_quantity']))
+            util.credit(db, tx['block_index'], output['address'], config.XPT, int(call_price * output['callback_quantity']))
 
     # Add parsed transaction to message-type–specific table.
     bindings = {

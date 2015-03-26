@@ -1,7 +1,7 @@
 """
 Initialise database.
 
-Sieve blockchain for Counterparty transactions, and add them to the database.
+Sieve blockchain for Paytokens transactions, and add them to the database.
 """
 
 import os
@@ -15,14 +15,14 @@ import collections
 from Crypto.Cipher import ARC4
 import apsw
 
-from . import (config, exceptions, util, bitcoin)
-from . import (send, order, btcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
+from . import (config, exceptions, util, litecoin)
+from . import (send, order, ltcpay, issuance, broadcast, bet, dividend, burn, cancel, callback, rps, rpsresolve)
 
 # Order matters for FOREIGN KEY constraints.
 TABLES = ['credits', 'debits', 'messages'] + \
          ['bet_match_resolutions', 'order_match_expirations',
           'order_matches', 'order_expirations', 'orders', 'bet_match_expirations',
-          'bet_matches', 'bet_expirations', 'bets', 'broadcasts', 'btcpays',
+          'bet_matches', 'bet_expirations', 'bets', 'broadcasts', 'ltcpays',
           'burns', 'callbacks', 'cancels', 'dividends', 'issuances', 'sends',
           'rps_match_expirations', 'rps_expirations', 'rpsresolves', 'rps_matches', 'rps']
 
@@ -62,8 +62,8 @@ def parse_tx (db, tx):
         send.parse(db, tx, message)
     elif message_type_id == order.ID:
         order.parse(db, tx, message)
-    elif message_type_id == btcpay.ID:
-        btcpay.parse(db, tx, message)
+    elif message_type_id == ltcpay.ID:
+        ltcpay.parse(db, tx, message)
     elif message_type_id == issuance.ID:
         issuance.parse(db, tx, message)
     elif message_type_id == broadcast.ID:
@@ -147,7 +147,7 @@ def initialise(db):
                       block_time INTEGER,
                       source TEXT,
                       destination TEXT,
-                      btc_amount INTEGER,
+                      ltc_amount INTEGER,
                       fee INTEGER,
                       data BLOB,
                       supported BOOL DEFAULT 1,
@@ -340,27 +340,27 @@ def initialise(db):
                       tx1_address_idx ON order_matches (tx1_address)
                    ''')
 
-    # BTCpays
-    cursor.execute('''CREATE TABLE IF NOT EXISTS btcpays(
+    # LTCpays
+    cursor.execute('''CREATE TABLE IF NOT EXISTS ltcpays(
                       tx_index INTEGER PRIMARY KEY,
                       tx_hash TEXT UNIQUE,
                       block_index INTEGER,
                       source TEXT,
                       destination TEXT,
-                      btc_amount INTEGER,
+                      ltc_amount INTEGER,
                       order_match_id TEXT,
                       status TEXT,
                       FOREIGN KEY (tx_index, tx_hash, block_index) REFERENCES transactions(tx_index, tx_hash, block_index))
                    ''')
                       # Disallows invalids: FOREIGN KEY (order_match_id) REFERENCES order_matches(id))
     cursor.execute('''CREATE INDEX IF NOT EXISTS
-                      block_index_idx ON btcpays (block_index)
+                      block_index_idx ON ltcpays (block_index)
                    ''')
     cursor.execute('''CREATE INDEX IF NOT EXISTS
-                      source_idx ON btcpays (source)
+                      source_idx ON ltcpays (source)
                    ''')
     cursor.execute('''CREATE INDEX IF NOT EXISTS
-                      destination_idx ON btcpays (destination)
+                      destination_idx ON ltcpays (destination)
                    ''')
 
     # Issuances
@@ -834,10 +834,10 @@ def get_address (scriptpubkey):
     pubkeyhash = get_pubkeyhash(scriptpubkey)
     if not pubkeyhash: return False
 
-    address = bitcoin.base58_check_encode(pubkeyhash, config.ADDRESSVERSION)
+    address = litecoin.base58_check_encode(pubkeyhash, config.ADDRESSVERSION)
 
     # Test decoding of address.
-    if address != config.UNSPENDABLE and binascii.unhexlify(bytes(pubkeyhash, 'utf-8')) != bitcoin.base58_decode(address, config.ADDRESSVERSION):
+    if address != config.UNSPENDABLE and binascii.unhexlify(bytes(pubkeyhash, 'utf-8')) != litecoin.base58_decode(address, config.ADDRESSVERSION):
         return False
 
     return address
@@ -852,7 +852,7 @@ def get_tx_info (tx, block_index):
     fee = 0
 
     # Get destination output and data output.
-    destination, btc_amount, data = None, None, b''
+    destination, ltc_amount, data = None, None, b''
     pubkeyhash_encoding = False
     for vout in tx['vout']:
         fee -= vout['value'] * config.UNIT
@@ -889,11 +889,11 @@ def get_tx_info (tx, block_index):
                     data += data_chunk
 
         # Destination is the first output before the data.
-        if not destination and not btc_amount and not data:
+        if not destination and not ltc_amount and not data:
             address = get_address(vout['scriptPubKey'])
             if address:
                 destination = address
-                btc_amount = round(vout['value'] * config.UNIT) # Floats are awful.
+                ltc_amount = round(vout['value'] * config.UNIT) # Floats are awful.
 
     # Check for, and strip away, prefix (except for burns).
     if destination == config.UNSPENDABLE:
@@ -911,7 +911,7 @@ def get_tx_info (tx, block_index):
     source_list = []
     for vin in tx['vin']:                                               # Loop through input transactions.
         if 'coinbase' in vin: return b'', None, None, None, None
-        vin_tx = bitcoin.get_raw_transaction(vin['txid'])     # Get the full transaction data for this input transaction.
+        vin_tx = litecoin.get_raw_transaction(vin['txid'])     # Get the full transaction data for this input transaction.
         vout = vin_tx['vout'][vin['vout']]
         fee += vout['value'] * config.UNIT
 
@@ -923,7 +923,7 @@ def get_tx_info (tx, block_index):
     if all(x == source_list[0] for x in source_list): source = source_list[0]
     else: source = None
 
-    return source, destination, btc_amount, round(fee), data
+    return source, destination, ltc_amount, round(fee), data
 
 
 def reparse (db, block_index=None, quiet=False):
@@ -970,9 +970,9 @@ def reparse (db, block_index=None, quiet=False):
 def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
     cursor = db.cursor()
     # Get the important details about each transaction.
-    tx = bitcoin.get_raw_transaction(tx_hash)
+    tx = litecoin.get_raw_transaction(tx_hash)
     logging.debug('Status: Examining transaction {}.'.format(tx_hash))
-    source, destination, btc_amount, fee, data = get_tx_info(tx, block_index)
+    source, destination, ltc_amount, fee, data = get_tx_info(tx, block_index)
     if source and (data or destination == config.UNSPENDABLE):
         cursor.execute('''INSERT INTO transactions(
                             tx_index,
@@ -982,7 +982,7 @@ def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
                             block_time,
                             source,
                             destination,
-                            btc_amount,
+                            ltc_amount,
                             fee,
                             data) VALUES(?,?,?,?,?,?,?,?,?,?)''',
                             (tx_index,
@@ -992,7 +992,7 @@ def list_tx (db, block_hash, block_index, block_time, tx_hash, tx_index):
                              block_time,
                              source,
                              destination,
-                             btc_amount,
+                             ltc_amount,
                              fee,
                              data)
                       )
@@ -1016,7 +1016,7 @@ def follow (db):
             logging.info('Status: client minor version number mismatch ({} ≠ {}).'.format(minor_version, config.VERSION_MINOR))
             reparse(db, quiet=False)
         logging.info('Status: Connecting to backend.')
-        bitcoin.get_info()
+        litecoin.get_info()
         logging.info('Status: Resuming parsing.')
 
     except exceptions.DatabaseError:
@@ -1041,7 +1041,7 @@ def follow (db):
     while True:
 
         # Get new blocks.
-        block_count = bitcoin.get_block_count()
+        block_count = litecoin.get_block_count()
         if block_index <= block_count:
 
             logging.info('Block: {}'.format(str(block_index)))
@@ -1052,10 +1052,10 @@ def follow (db):
             while True:
                 if c == config.BLOCK_FIRST: break
 
-                # Bitcoind parent hash.
-                c_hash = bitcoin.get_block_hash(c)
-                c_block = bitcoin.get_block(c_hash)
-                bitcoind_parent = c_block['previousblockhash']
+                # Litecoind parent hash.
+                c_hash = litecoin.get_block_hash(c)
+                c_block = litecoin.get_block(c_hash)
+                litecoind_parent = c_block['previousblockhash']
 
                 # DB parent hash.
                 blocks = list(cursor.execute('''SELECT * FROM blocks
@@ -1064,7 +1064,7 @@ def follow (db):
                 db_parent = blocks[0]['block_hash']
 
                 # Compare.
-                if db_parent == bitcoind_parent:
+                if db_parent == litecoind_parent:
                     break
                 else:
                     c -= 1
@@ -1082,8 +1082,8 @@ def follow (db):
                 continue
 
             # Get and parse transactions in this block (atomically).
-            block_hash = bitcoin.get_block_hash(block_index)
-            block = bitcoin.get_block(block_hash)
+            block_hash = litecoin.get_block_hash(block_index)
+            block = litecoin.get_block(block_hash)
             block_time = block['time']
             tx_hash_list = block['tx']
             with db:
@@ -1115,7 +1115,7 @@ def follow (db):
                 del not_supported[tx_h]
             
             # Increment block index.
-            block_count = bitcoin.get_block_count()
+            block_count = litecoin.get_block_count()
             block_index +=1
 
         else:
@@ -1125,7 +1125,7 @@ def follow (db):
             else:
                 logging.debug('Status: Initialising mempool.')
 
-            # Get old counterpartyd mempool.
+            # Get old paytokensd mempool.
             old_mempool = list(cursor.execute('''SELECT * FROM mempool'''))
             old_mempool_hashes = [message['tx_hash'] for message in old_mempool]
 
@@ -1133,14 +1133,14 @@ def follow (db):
             curr_time = int(time.time())
             mempool_tx_index = tx_index
 
-            # For each transaction in Bitcoin Core mempool, if it’s new, create
+            # For each transaction in Litecoin Core mempool, if it’s new, create
             # a fake block, a fake transaction, capture the generated messages,
             # and then save those messages.
             # Every transaction in mempool is parsed independently. (DB is rolled back after each one.)
             mempool = []
-            for tx_hash in bitcoin.get_mempool():
+            for tx_hash in litecoin.get_mempool():
 
-                # If already in counterpartyd mempool, copy to new one.
+                # If already in paytokensd mempool, copy to new one.
                 if tx_hash in old_mempool_hashes:
                     for message in old_mempool:
                         if message['tx_hash'] == tx_hash:
@@ -1163,10 +1163,10 @@ def follow (db):
                                           )
 
                             # List transaction.
-                            try:    # Sometimes the transactions can’t be found: `{'code': -5, 'message': 'No information available about transaction'} Is txindex enabled in Bitcoind?`
+                            try:    # Sometimes the transactions can’t be found: `{'code': -5, 'message': 'No information available about transaction'} Is txindex enabled in Litecoind?`
                                 list_tx(db, config.MEMPOOL_BLOCK_HASH, config.MEMPOOL_BLOCK_INDEX, curr_time, tx_hash, mempool_tx_index)
                                 mempool_tx_index += 1
-                            except exceptions.BitcoindError:
+                            except exceptions.LitecoindError:
                                 assert False
 
                             # Parse transaction.
@@ -1184,7 +1184,7 @@ def follow (db):
                             else:
                                 # If a transaction hasn’t been added to the
                                 # table `transactions`, then it’s not a
-                                # Counterparty transaction.
+                                # Paytokens transaction.
                                 not_supported[tx_hash] = ''
                                 not_supported_sorted.append((block_index, tx_hash))
                                 assert False

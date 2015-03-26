@@ -5,9 +5,9 @@ import decimal
 D = decimal.Decimal
 from fractions import Fraction
 
-from . import (util, config, exceptions, bitcoin, util)
+from . import (util, config, exceptions, litecoin, util)
 
-"""Burn {} to earn {} during a special period of time.""".format(config.BTC, config.XCP)
+"""Burn {} to earn {} during a special period of time.""".format(config.LTC, config.XPT)
 
 ID = 60
 
@@ -39,11 +39,11 @@ def compose (db, source, quantity, overburn=False):
     problems = validate(db, source, destination, quantity, util.last_block(db)['block_index'], overburn=overburn)
     if problems: raise exceptions.BurnError(problems)
 
-    # Check that a maximum of 1 BTC total is burned per address.
+    # Check that a maximum of 1 LTC total is burned per address.
     burns = list(cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', source)))
     already_burned = sum([burn['burned'] for burn in burns])
     if quantity > (1 * config.UNIT - already_burned) and not overburn:
-        raise exceptions.BurnError('1 {} may be burned per address'.format(config.BTC))
+        raise exceptions.BurnError('1 {} may be burned per address'.format(config.LTC))
 
     cursor.close()
     return (source, [(destination, quantity)], None)
@@ -53,16 +53,16 @@ def parse (db, tx, message=None):
     status = 'valid'
 
     if status == 'valid':
-        problems = validate(db, tx['source'], tx['destination'], tx['btc_amount'], tx['block_index'], overburn=False)
+        problems = validate(db, tx['source'], tx['destination'], tx['ltc_amount'], tx['block_index'], overburn=False)
         if problems: status = 'invalid: ' + '; '.join(problems)
 
-        if tx['btc_amount'] != None:
-            sent = tx['btc_amount']
+        if tx['ltc_amount'] != None:
+            sent = tx['ltc_amount']
         else:
             sent = 0
 
     if status == 'valid':
-        # Calculate quantity of XCP earned. (Maximum 1 BTC in total, ever.)
+        # Calculate quantity of XPT earned. (Maximum 1 LTC in total, ever.)
         cursor = db.cursor()
         cursor.execute('''SELECT * FROM burns WHERE (status = ? AND source = ?)''', ('valid', tx['source']))
         burns = cursor.fetchall()
@@ -74,11 +74,11 @@ def parse (db, tx, message=None):
 
         total_time = config.BURN_END - config.BURN_START
         partial_time = config.BURN_END - tx['block_index']
-        multiplier = (1000 + (500 * Fraction(partial_time, total_time)))
+        multiplier = config.BURN_MULTIPLIER * (1 + (.5 * Fraction(partial_time, total_time)))
         earned = round(burned * multiplier)
 
-        # Credit source address with earned XCP.
-        util.credit(db, tx['block_index'], tx['source'], config.XCP, earned, event=tx['tx_hash'])
+        # Credit source address with earned XPT.
+        util.credit(db, tx['block_index'], tx['source'], config.XPT, earned, event=tx['tx_hash'])
     else:
         burned = 0
         earned = 0

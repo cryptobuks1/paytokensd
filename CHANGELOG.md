@@ -1,12 +1,12 @@
 ## Client Versions ##
 * v9.42.0 (2014-09-04)
-	* disable dividends to XCP holders (protocol change: 320000)
+	* disable dividends to XPT holders (protocol change: 320000)
 	* allow dividends only from issuers (protocol change: 320000)
 * v9.41.0 (2014-08-21)
 	* fixed bug in new text and descriptions
 * v9.40.0 (2014-08-20)
-	* allow dividends to be paid to XCP holders (protocol change: 317500)
-	* fixed bug in BTCpay validation
+	* allow dividends to be paid to XPT holders (protocol change: 317500)
+	* fixed bug in LTCpay validation
 	* allow null expirations (protocol change: 317500)
 	* assert first block in database is BLOCK_FIRST
 	* arbitrarily long asset descriptions and broadcast texts (protocol change: 317500)
@@ -16,15 +16,15 @@
 * v9.38.0 (2014-08-05)
 	* don’t close order matches when penalizing (protocol change: 314250)
 * v9.37.0 (2014-08-02)
-	* close sell BTC orders and order_matches of addresses that fail to make a BTC payment (protocol change: 313900)
+	* close sell LTC orders and order_matches of addresses that fail to make a LTC payment (protocol change: 313900)
 * v9.36.0 (2014-08-02)
 	* version mismatch
 * v9.35.0 (2014-08-02)
-	* minimum BTC order match size; don’t check source address of BTCpay (protocol change: 313900)
+	* minimum LTC order match size; don’t check source address of LTCpay (protocol change: 313900)
 * v9.34.0 (2014-07-24)
 	* CFDs temporarily disabled
 * v9.33.1 (2014-07-23)
-	* moved Armory support to Counterwallet (allow use of uncompressed keys)
+	* moved Armory support to Paywallet (allow use of uncompressed keys)
 	* improved performance of mempool population
 	* new ‘blockchain’ backend
 * v9.33.0 (2014-07-18)
@@ -93,7 +93,7 @@
 	* tweaked test suite
 	* fixed failed sanity check on testnet
 * v9.17.0
-	* failed XCP conservation sanity check on testnet (deadline checking in bets)
+	* failed XPT conservation sanity check on testnet (deadline checking in bets)
 * v9.16.3
 	* bug fixes
 * v9.16.2
@@ -104,7 +104,7 @@
 	* improved algorithm for choosing unspent txouts in transaction construction
 	* allow the unconfirmed inputs CLI option
 * v9.16
-	* regular version, database, Bitcoind checking in API
+	* regular version, database, Litecoind checking in API
 	* better testcoin support
 	* simplify version checking (combined DB and client versions), which necessitates skipping versions
 	* simplify betting fees: just deduct from pot at settlement (protocol change: retroactive)
@@ -115,15 +115,15 @@
 	* fully floating transaction fees
 	* lots of miscellaneous bug fixes
 	* replenish fee_required_remaining on order match expiration (protocol change: 297000)
-	* transaction signing for source addresses not in Bitcoin Core wallet
+	* transaction signing for source addresses not in Litecoin Core wallet
 	* tweaks to API
 * v6.13
 	* miscellaneous bug fixes
 	* add some sanity checks
-	* partially allow for CLI input of private keys (to bypass Bitcoind wallet)
+	* partially allow for CLI input of private keys (to bypass Litecoind wallet)
 	* tweak the API
 	* fill out the test suite a bit
-	* temporarily double the default fee to .0002 BTC
+	* temporarily double the default fee to .0002 LTC
 * v6.12
 * v6.11
 * v6.10
@@ -157,7 +157,7 @@
 * arbitrary spend with multi‐sig input: retroactive
 * deduct `fee_required`, too: 287800
 * value, quantity, etc. sanity checking: retroactive
-* reduce issuance fee to 0.5 XCP: 291700
+* reduce issuance fee to 0.5 XPT: 291700
 * match only with positive get/counterwager remaining: 292000
 * pay‐to‐pubkeyhash encoding: 293000
 * filtered negative order fees: 294000

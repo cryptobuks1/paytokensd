@@ -14,7 +14,7 @@ VERSION_REVISION = 0
 VERSION_STRING = str(VERSION_MAJOR) + '.' + str(VERSION_MINOR) + '.' + str(VERSION_REVISION)
 
 
-# Counterparty protocol
+# Paytokens protocol
 TXTYPE_FORMAT = '>I'
 
 TWO_WEEKS = 2 * 7 * 24 * 3600
@@ -28,34 +28,34 @@ MEMPOOL_BLOCK_INDEX = 9999999
 MAX_INT = 2**63 - 1
 
 
-# Bitcoin Core
+# Litecoin Core
 OP_RETURN_MAX_SIZE = 40 # bytes
 
 
 # Currency agnosticism
-BTC = 'BTC'
-XCP = 'XCP'
+LTC = 'LTC'
+XPT = 'XPT'
 
-BTC_NAME = 'Bitcoin'
-BTC_CLIENT = 'bitcoind'
-XCP_NAME = 'Counterparty'
-XCP_CLIENT = 'counterpartyd'
+LTC_NAME = 'Litecoin'
+LTC_CLIENT = 'litecoind'
+XPT_NAME = 'Paytokens'
+XPT_CLIENT = 'paytokensd'
 
-DEFAULT_RPC_PORT_TESTNET = 14000
-DEFAULT_RPC_PORT = 4000
+DEFAULT_RPC_PORT_TESTNET = 17730
+DEFAULT_RPC_PORT = 7730
 
-DEFAULT_BACKEND_RPC_PORT_TESTNET = 18332
-DEFAULT_BACKEND_RPC_PORT = 8332
+DEFAULT_BACKEND_RPC_PORT_TESTNET = 19332
+DEFAULT_BACKEND_RPC_PORT = 9332
 
-UNSPENDABLE_TESTNET = 'mvCounterpartyXXXXXXXXXXXXXXW24Hef'
-UNSPENDABLE_MAINNET = '1CounterpartyXXXXXXXXXXXXXXXUWLpVr'
+UNSPENDABLE_TESTNET = 'LPaytokensxxxxxxxxxxxxxxxxxxYSXa9a'
+UNSPENDABLE_MAINNET = 'LPaytokensxxxxxxxxxxxxxxxxxxYSXa9a'
 
 ADDRESSVERSION_TESTNET = b'\x6f'
 # PRIVATEKEY_VERSION_TESTNET =
-ADDRESSVERSION_MAINNET = b'\x00'
+ADDRESSVERSION_MAINNET = b'\x30'
 # PRIVATEKEY_VERSION_MAINNET =
-MAGIC_BYTES_TESTNET = b'\xfa\xbf\xb5\xda'   # For bip-0010
-MAGIC_BYTES_MAINNET = b'\xf9\xbe\xb4\xd9'   # For bip-0010
+MAGIC_BYTES_TESTNET = b'\xfc\xc1\xb7\xdc'   # For bip-0010
+MAGIC_BYTES_MAINNET = b'\xfb\xc0\xb6\xdb'   # For bip-0010
 
 BLOCK_FIRST_TESTNET_TESTCOIN = 154908
 BURN_START_TESTNET_TESTCOIN = 154908
@@ -69,20 +69,21 @@ BLOCK_FIRST_MAINNET_TESTCOIN = 278270
 BURN_START_MAINNET_TESTCOIN = 278310
 BURN_END_MAINNET_TESTCOIN = 2500000     # A long time.
 
-BLOCK_FIRST_MAINNET = 278270
-BURN_START_MAINNET = 278310
-BURN_END_MAINNET = 283810
+BLOCK_FIRST_MAINNET = 745173
+BURN_START_MAINNET = 745174
+BURN_END_MAINNET = 745489
 
 
 # Protocol defaults
-# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in counterblockd/lib/config.py as well
+# NOTE: If the DUST_SIZE constants are changed, they MUST also be changed in payblockd/lib/config.py as well
     # TODO: This should be updated, given their new configurability.
 # TODO: The dust values should be lowered by 90%, once transactions with smaller outputs start confirming faster: <https://github.com/mastercoin-MSC/spec/issues/192>
-DEFAULT_REGULAR_DUST_SIZE = 5430         # TODO: This is just a guess. I got it down to 5530 satoshis.
-DEFAULT_MULTISIG_DUST_SIZE = 7800        # <https://bitcointalk.org/index.php?topic=528023.msg7469941#msg7469941>
+DEFAULT_REGULAR_DUST_SIZE = 5011         # TODO: This is just a guess. I got it down to 5530 satoshis.
+DEFAULT_MULTISIG_DUST_SIZE = 6011        # <https://litecointalk.org/index.php?topic=528023.msg7469941#msg7469941>
 DEFAULT_OP_RETURN_VALUE = 0
-DEFAULT_FEE_PER_KB = 10000                # Bitcoin Core default is 10000.  # TODO: Lower 10x later, too.
+DEFAULT_FEE_PER_KB = 100000                # Litecoin Core default is 10000.  # TODO: Lower 10x later, too.
 
+BURN_MULTIPLIER = 400000000000
 
 # UI defaults
 DEFAULT_FEE_FRACTION_REQUIRED = .009   # 0.90%
